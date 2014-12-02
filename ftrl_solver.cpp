@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "util.h"
 
-FtrlPrimalTrainer::FtrlPrimalTrainer(double alpha, double beta, double l1,
+FtrlProximalTrainer::FtrlProximalTrainer(double alpha, double beta, double l1,
 		double l2, size_t n, double dropout)
 : alpha_(alpha), beta_(beta), l1_(l1), l2_(l2), feat_num_(n), dropout_(dropout),
 uniform_dist_(0.0, std::nextafter(1.0, std::numeric_limits<double>::max())) {
@@ -13,7 +13,7 @@ uniform_dist_(0.0, std::nextafter(1.0, std::numeric_limits<double>::max())) {
 	vector_set(z_, 0, feat_num_);
 }
 
-FtrlPrimalTrainer::FtrlPrimalTrainer(const char* path)
+FtrlProximalTrainer::FtrlProximalTrainer(const char* path)
 : uniform_dist_(0.0, std::nextafter(1.0, std::numeric_limits<double>::max())) {
 	FILE* fp = fopen(path, "r");
 
@@ -43,12 +43,12 @@ FtrlPrimalTrainer::FtrlPrimalTrainer(const char* path)
 	fclose(fp);
 }
 
-FtrlPrimalTrainer::~FtrlPrimalTrainer() {
+FtrlProximalTrainer::~FtrlProximalTrainer() {
 	sse_free(n_);
 	sse_free(z_);
 }
 
-double FtrlPrimalTrainer::Update(std::vector<std::pair<size_t, double> >& x, double y) {
+double FtrlProximalTrainer::Update(std::vector<std::pair<size_t, double> >& x, double y) {
 	std::vector<std::pair<size_t, double> > weights;
 	double wTx = 0.;
 
@@ -88,7 +88,7 @@ double FtrlPrimalTrainer::Update(std::vector<std::pair<size_t, double> >& x, dou
 	return pred;
 }
 
-double FtrlPrimalTrainer::Predict(std::vector<std::pair<size_t, double> >& x) {
+double FtrlProximalTrainer::Predict(std::vector<std::pair<size_t, double> >& x) {
 	double wTx = 0.;
 
 	for(auto& item : x) {
@@ -111,7 +111,7 @@ double FtrlPrimalTrainer::Predict(std::vector<std::pair<size_t, double> >& x) {
 	return pred;
 }
 
-bool FtrlPrimalTrainer::Save(const char* path) {
+bool FtrlProximalTrainer::Save(const char* path) {
 	FILE* fp = fopen(path, "w");
 
 
@@ -133,7 +133,7 @@ bool FtrlPrimalTrainer::Save(const char* path) {
 	return true;
 }
 
-bool FtrlPrimalTrainer::SaveDetail(const char* path) {
+bool FtrlProximalTrainer::SaveDetail(const char* path) {
 	FILE* fp = fopen(path, "w");
 	fprintf(fp, "%lf\n", alpha_);
 	fprintf(fp, "%lf\n", beta_);

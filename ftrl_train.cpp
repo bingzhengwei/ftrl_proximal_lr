@@ -64,7 +64,7 @@ bool train(const std::string& input, const std::string& model, const std::string
 		fclose(cfp);
 	}
 
-	FtrlPrimalTrainer learner(alpha, beta, l1, l2, feat_num, dropout);
+	FtrlProximalTrainer learner(alpha, beta, l1, l2, feat_num, dropout);
 
 	auto train_one_iter = [&](size_t iter) {
 		rewind(fp);

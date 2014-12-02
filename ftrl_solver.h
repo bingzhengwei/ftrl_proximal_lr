@@ -10,13 +10,13 @@
 #define DEFAULT_L1 1.
 #define DEFAULT_L2 1.
 
-class FtrlPrimalTrainer {
+class FtrlProximalTrainer {
 public:
-	FtrlPrimalTrainer(double alpha, double beta, double l1,
+	FtrlProximalTrainer(double alpha, double beta, double l1,
 			double l2, size_t n, double dropout = 0);
-	FtrlPrimalTrainer(const char* path);
+	FtrlProximalTrainer(const char* path);
 
-	virtual ~FtrlPrimalTrainer();
+	virtual ~FtrlProximalTrainer();
 
 	double Update(std::vector<std::pair<size_t, double> >& x, double y);
 	double Predict(std::vector<std::pair<size_t, double> >& x);
