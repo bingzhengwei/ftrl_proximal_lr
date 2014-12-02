@@ -1,5 +1,6 @@
 #include "ftrl_solver.h"
 #include <cstdio>
+#include <stdexcept>
 #include "util.h"
 
 FtrlPrimalTrainer::FtrlPrimalTrainer(double alpha, double beta, double l1,
@@ -16,12 +17,10 @@ FtrlPrimalTrainer::FtrlPrimalTrainer(const char* path)
 : uniform_dist_(0.0, std::nextafter(1.0, std::numeric_limits<double>::max())) {
 	FILE* fp = fopen(path, "r");
 
-	fscanf(fp, "%lf", &alpha_);
-	fscanf(fp, "%lf", &beta_);
-	fscanf(fp, "%lf", &l1_);
-	fscanf(fp, "%lf", &l2_);
-	fscanf(fp, "%lu", &feat_num_);
-	fscanf(fp, "%lf", &dropout_);
+	int ret = fscanf(fp, "%lf %lf %lf %lf %lu %lf", &alpha_, &beta_, &l1_, &l2_, &feat_num_, &dropout_);
+	if (ret != 6) {
+		throw std::runtime_error(std::string("Failed to load model file"));
+	}
 
 	n_ = sse_malloc(feat_num_);
 	z_ = sse_malloc(feat_num_);
@@ -30,12 +29,14 @@ FtrlPrimalTrainer::FtrlPrimalTrainer(const char* path)
 
 	double v;
 	for(size_t i = 0; i < feat_num_; ++i) {
-		fscanf(fp, "%lf", &v);
+		ret = fscanf(fp, "%lf", &v);
+		if (ret != 1) throw std::runtime_error(std::string("Failed to load model file"));
 		n_[i] = v;
 	}
 
 	for(size_t i = 0; i < feat_num_; ++i) {
-		fscanf(fp, "%lf", &v);
+		ret = fscanf(fp, "%lf", &v);
+		if (ret != 1) throw std::runtime_error(std::string("Failed to load model file"));
 		z_[i] = v;
 	}
 

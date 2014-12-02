@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <vector>
+#include <stdexcept>
 #include "ftrl_solver.h"
 #include "util.h"
 #include "common.h"
@@ -48,8 +49,9 @@ bool train(const std::string& input, const std::string& model, const std::string
 
 	if (cache && file_exists(cache_file.c_str())) {
 		FILE* cfp = fopen(cache_file.c_str(), "r");
-		fscanf(cfp, "%lu", &count);
-		fscanf(cfp, "%lu", &feat_num);
+		if (fscanf(cfp, "%lu %lu", &count, &feat_num) != 2) {
+			throw std::runtime_error(std::string("Failed to load cache file"));
+		}
 		fclose(cfp);
 		printf("\tinstances=[%lu] features=[%lu] from=cache\n", count, feat_num);
 	} else {
@@ -58,8 +60,7 @@ bool train(const std::string& input, const std::string& model, const std::string
 
 	if (cache) {
 		FILE* cfp = fopen(cache_file.c_str(), "w");
-		fprintf(cfp, "%lu\n", count);
-		fprintf(cfp, "%lu\n", feat_num);
+		fprintf(cfp, "%lu\n%lu\n", count, feat_num);
 		fclose(cfp);
 	}
 
