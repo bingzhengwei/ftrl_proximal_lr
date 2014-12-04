@@ -44,6 +44,9 @@ bool train(const std::string& input, const std::string& model, const std::string
 				fflush(stdout);
 			}
 		}
+
+		printf("loading=[%lu]\r", count);
+		fflush(stdout);
 		printf("\n\tinstances=[%lu] features=[%lu] time=[%lf]\n", count, feat_num, timer.StopTimer());
 	};
 
@@ -82,6 +85,9 @@ bool train(const std::string& input, const std::string& model, const std::string
 				fflush(stdout);
 			}
 		}
+
+		printf("epoch=%lu processed=[%.2f%%] time=[%lf] train-loss=%lf\r", iter, float(line_no) * 100. / float(count), timer.StopTimer(), loss / line_no);
+		fflush(stdout);
 		printf("\n");
 	};
 
