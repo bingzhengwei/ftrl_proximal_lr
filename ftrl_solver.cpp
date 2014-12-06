@@ -50,6 +50,7 @@ FtrlProximalTrainer::~FtrlProximalTrainer() {
 
 double FtrlProximalTrainer::Update(std::vector<std::pair<size_t, double> >& x, double y) {
 	std::vector<std::pair<size_t, double> > weights;
+	std::vector<double> gradients;
 	double wTx = 0.;
 
 	for(auto& item : x) {
@@ -72,17 +73,22 @@ double FtrlProximalTrainer::Update(std::vector<std::pair<size_t, double> >& x, d
 			val = (sign * l1_ - z_[idx]) / ((beta_ + sqrt(n_[idx])) / alpha_ + l2_);
 		}
 		weights.push_back(std::make_pair(idx, val));
+		gradients.push_back(item.second);
 		wTx += val * item.second;
 	}
 
 	double pred = 1. / (1. + safe_exp(-wTx));
 	double grad = pred - y;
+	std::transform(gradients.begin(), gradients.end(), gradients.begin(),
+			std::bind1st(std::multiplies<double>(), grad));
 
-	for(auto& item : weights) {
-		size_t i = item.first;
-		double sigma = (sqrt(n_[i] + grad * grad) - sqrt(n_[i])) / alpha_;
-		z_[i] += grad - sigma * item.second;
-		n_[i] += grad * grad;
+	for(size_t k = 0; k < weights.size(); ++k) {
+		size_t i = weights[k].first;
+		double w_i = weights[k].second;
+		double grad_i = gradients[k];
+		double sigma = (sqrt(n_[i] + grad_i * grad_i) - sqrt(n_[i])) / alpha_;
+		z_[i] += grad_i - sigma * w_i;
+		n_[i] += grad_i * grad_i;
 	}
 
 	return pred;
