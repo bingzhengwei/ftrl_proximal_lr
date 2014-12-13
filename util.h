@@ -76,11 +76,8 @@ inline static void aligned_free_internal(void * p) {
 #endif
 }
 
-inline size_t round_up(size_t n) {
-	n += 7;
-	n /= 8;
-	n *= 8;
-	return n;
+inline size_t round_up(size_t m, size_t n = 8) {
+	return ((m + n - 1) / n) * n;
 }
 
 inline double* sse_malloc(size_t n) {
