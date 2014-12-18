@@ -353,6 +353,14 @@ bool FastFtrlTrainer<T>::TrainImpl(const char* model_file, const char* train_fil
 				T pred = solvers[i].Update(x, y, param_server_);
 				local_loss += calc_loss(y, pred);
 				++local_count;
+
+				if (i == 0 && local_count % 10000 == 0) {
+					size_t tmp_cnt = std::min(local_count * num_threads_, line_cnt);
+					fprintf(stdout, "epoch=%lu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
+							(uint64_t)iter, (float)tmp_cnt*100 / (float)line_cnt,
+							timer.StopTimer(), (float)local_loss / (float)local_count);
+					fflush(stdout);
+				}
 			}
 
 			{
