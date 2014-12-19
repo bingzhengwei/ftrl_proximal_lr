@@ -12,7 +12,7 @@ void print_usage() {
 	printf("Usage: ./ftrl_train -f input_file -m model_file [options]\n"
 		"options:\n"
 		"-t test_file : set evaluation file\n"
-		"--cache/-c : cache feature count and sample count of input file, default true\n"
+		//"--cache/-c : cache feature count and sample count of input file, default true\n"
 		"--epoch iteration : set number of iteration, default 1\n"
 		"--alpha alpha : set alpha param, default 0.15\n"
 		"--beta beta : set beta param, default 1\n"
