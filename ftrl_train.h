@@ -57,7 +57,7 @@ public:
 	virtual ~FastFtrlTrainer();
 
 	bool Initialize(size_t epoch, size_t num_threads = 0, bool cache_feature_num = true,
-		size_t push_step = kPushStep, size_t fetch_step = kFetchStep);
+		T burn_in = 0, size_t push_step = kPushStep, size_t fetch_step = kFetchStep);
 
 	bool Train(T alpha, T beta, T l1, T l2, T dropout,
 		const char* model_file, const char* train_file,
@@ -75,6 +75,7 @@ private:
 	bool cache_feature_num_;
 	size_t push_step_;
 	size_t fetch_step_;
+	T burn_in_;
 
 	FtrlParamServer<T> param_server_;
 	size_t num_threads_;
@@ -199,7 +200,7 @@ FastFtrlTrainer<T>::~FastFtrlTrainer() {
 
 template<typename T>
 bool FastFtrlTrainer<T>::Initialize(size_t epoch, size_t num_threads,
-		bool cache_feature_num, size_t push_step, size_t fetch_step) {
+		bool cache_feature_num, T burn_in, size_t push_step, size_t fetch_step) {
 	epoch_ = epoch;
 	cache_feature_num_ = cache_feature_num;
 	push_step_ = push_step;
@@ -209,6 +210,8 @@ bool FastFtrlTrainer<T>::Initialize(size_t epoch, size_t num_threads,
 	} else {
 		num_threads_ = num_threads;
 	}
+
+	burn_in_ = burn_in;
 
 	init_ = true;
 	return init_;
@@ -371,6 +374,31 @@ bool FastFtrlTrainer<T>::TrainImpl(const char* model_file, const char* train_fil
 
 			solvers[i].PushParam(param_server_);
 		};
+
+		if (iter == 0 && util_greater(burn_in_, (T)0)) {
+			size_t burn_in_cnt = (size_t) (burn_in_ * line_cnt);
+			std::vector<std::pair<size_t, T> > x;
+			T y;
+			T local_loss = 0;
+			for(size_t i = 0; i < burn_in_cnt; ++i) {
+				if (!file_parser.ReadSample(y, x)) {
+					break;
+				}
+
+				T pred = param_server_.Update(x, y);
+				local_loss += calc_loss(y, pred);
+				if (i % 10000 == 0) {
+					fprintf(stdout, "burn-in processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
+						(float)(i+1)*100 / (float)line_cnt, timer.StopTimer(), (float)local_loss / (float)(i+1));
+					fflush(stdout);
+				}
+			}
+
+			fprintf(stdout, "burn-in processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\n",
+					(float)burn_in_cnt*100 / (float)line_cnt, timer.StopTimer(), (float)local_loss / (float)burn_in_cnt);
+
+			if (util_equal(burn_in_, (T)1)) continue;
+		}
 
 		for(size_t i = 0; i < num_threads_; ++i) {
 			solvers[i].Reset(param_server_);

@@ -4,7 +4,7 @@
 #include "ftrl_solver.h"
 #include "lock.h"
 
-enum { kParamGroupSize = 128, kFetchStep = 32, kPushStep = 32 };
+enum { kParamGroupSize = 10, kFetchStep = 3, kPushStep = 3 };
 
 inline size_t calc_group_num(size_t n) {
 	return (n + kParamGroupSize - 1) / kParamGroupSize;

@@ -19,9 +19,10 @@ void print_usage() {
 		"--l1 l1 : set l1 param, default 1\n"
 		"--l2 l2 : set l2 param, default 1\n"
 		"--dropout dropout : set dropout rate, default 0\n"
-		"--sync-step step : set push/fetch step of async ftrl, default 32\n"
+		"--sync-step step : set push/fetch step of async ftrl, default 3\n"
+		"--burn-in fraction : set fraction of data used to burn-in with single thread on async model, default 0\n"
 		"--start-from model_file : set to continue training from model_file\n"
-		"--thread num : set thread num, default is hardware concurrency (set 1 will enable single thread mode)\n"
+		"--thread num : set thread num, default is single thread. 0 will use hardware concurrency\n"
 		"--double-precision : set to use double precision, default false\n"
 		"--help : print this help\n"
 	      );
@@ -39,6 +40,7 @@ int main (int argc, char* argv[]) {
 		{"l1", required_argument, NULL, 'l'},
 		{"l2", required_argument, NULL, 'e'},
 		{"sync-step", required_argument, NULL, 's'},
+		{"burn-in", required_argument, NULL, 'u'},
 		{"cache", no_argument, NULL, 'c'},
 		{"start-from", required_argument, NULL, 'r'},
 		{"thread", required_argument, NULL, 'n'},
@@ -62,7 +64,9 @@ int main (int argc, char* argv[]) {
 	bool cache = true;
 	size_t push_step = kPushStep;
 	size_t fetch_step = kFetchStep;
-	size_t num_threads = 0;
+	size_t num_threads = 1;
+
+	double burn_in_phase = 0;
 
 	bool double_precision = false;
 
@@ -108,6 +112,9 @@ int main (int argc, char* argv[]) {
 		case 'x':
 			double_precision = true;
 			break;
+		case 'u':
+			burn_in_phase = atof(optarg);
+			break;
 		case 'r':
 			start_from_model = optarg;
 			break;
@@ -140,7 +147,7 @@ int main (int argc, char* argv[]) {
 			}
 		} else {
 			FastFtrlTrainer<double> trainer;
-			trainer.Initialize(epoch, num_threads, cache, push_step, fetch_step);
+			trainer.Initialize(epoch, num_threads, cache, burn_in_phase, push_step, fetch_step);
 
 			if (start_from_model.size() > 0) {
 				trainer.Train(start_from_model.c_str(),
@@ -164,7 +171,7 @@ int main (int argc, char* argv[]) {
 			}
 		} else {
 			FastFtrlTrainer<float> trainer;
-			trainer.Initialize(epoch, num_threads, cache, push_step, fetch_step);
+			trainer.Initialize(epoch, num_threads, cache, burn_in_phase, push_step, fetch_step);
 
 			if (start_from_model.size() > 0) {
 				trainer.Train(start_from_model.c_str(),
