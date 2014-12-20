@@ -1,147 +1,77 @@
+#include <getopt.h>
 #include <unistd.h>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-#include <vector>
-#include <stdexcept>
-#include "ftrl_solver.h"
+#include <iostream>
+#include <locale>
 #include "util.h"
-#include "common.h"
-#include "stopwatch.h"
+#include "fast_ftrl_solver.h"
+#include "ftrl_train.h"
 
-void print_usage(int argc, char* argv[]) {
-	printf("Usage:\n");
-	printf("\t%s -f input_file -m model [-t test_file] [-i iter] [-a alpha] [-b beta] [-d dropout] [-l l1] [-e l2] [-c]\n", argv[0]);
+using namespace std;
+
+void print_usage() {
+	printf("Usage: ./ftrl_train -f input_file -m model_file [options]\n"
+		"options:\n"
+		"-t test_file : set evaluation file\n"
+		//"--cache/-c : cache feature count and sample count of input file, default true\n"
+		"--epoch iteration : set number of iteration, default 1\n"
+		"--alpha alpha : set alpha param, default 0.15\n"
+		"--beta beta : set beta param, default 1\n"
+		"--l1 l1 : set l1 param, default 1\n"
+		"--l2 l2 : set l2 param, default 1\n"
+		"--dropout dropout : set dropout rate, default 0\n"
+		"--sync-step step : set push/fetch step of async ftrl, default 3\n"
+		"--burn-in fraction : set fraction of data used to burn-in with single thread on async model, default 0\n"
+		"--start-from model_file : set to continue training from model_file\n"
+		"--thread num : set thread num, default is single thread. 0 will use hardware concurrency\n"
+		"--double-precision : set to use double precision, default false\n"
+		"--help : print this help\n"
+	      );
 }
 
-bool train(const std::string& input, const std::string& model, const std::string& test,
-		double alpha, double beta, double l1, double l2,
-		double dropout, size_t epoch, bool cache) {
-	size_t feat_num = 0;
-	int max_line_len = 10240;
-	char* line = (char *) malloc(sizeof(char) * max_line_len);
+int main (int argc, char* argv[]) {
+	int opt;
+	int opt_idx = 0;
 
-	printf("training with settings:\n");
-	printf("\talpha=[%lf] beta=[%lf] l1=[%lf] l2=[%lf] epoch=[%lu] dropout=[%lf]\n", alpha, beta, l1, l2, epoch, dropout);
-	printf("\tinput_file=[%s] model_file=[%s] test_file=[%s]\n", input.c_str(), model.c_str(), test.c_str());
-
-	StopWatch timer;
-	std::vector<std::pair<size_t, double> > x;
-	double y;
-	size_t count = 0;
-	FILE* fp = fopen(input.c_str(), "r");
-	std::string cache_file = input + ".cache";
-
-	auto read_feat_count = [&]() {
-		while(read_line(fp, line, max_line_len) != NULL) {
-			if (!parse_line(line, y, x)) continue;
-			for(auto& i : x) {
-				if (i.first + 1 > feat_num) feat_num = i.first + 1;
-			}
-			++count;
-			if (count % 100000 == 0) {
-				printf("loading=[%lu]\r", count);
-				fflush(stdout);
-			}
-		}
-
-		printf("loading=[%lu]\r", count);
-		fflush(stdout);
-		printf("\n\tinstances=[%lu] features=[%lu] time=[%lf]\n", count, feat_num, timer.StopTimer());
+	static struct option long_options[] = {
+		{"epoch", required_argument, NULL, 'i'},
+		{"alpha", required_argument, NULL, 'a'},
+		{"beta", required_argument, NULL, 'b'},
+		{"dropout", required_argument, NULL, 'd'},
+		{"l1", required_argument, NULL, 'l'},
+		{"l2", required_argument, NULL, 'e'},
+		{"sync-step", required_argument, NULL, 's'},
+		{"burn-in", required_argument, NULL, 'u'},
+		{"cache", no_argument, NULL, 'c'},
+		{"start-from", required_argument, NULL, 'r'},
+		{"thread", required_argument, NULL, 'n'},
+		{"double-precision", no_argument, NULL, 'x'},
+		{"help", no_argument, NULL, 'h'},
+		{0, 0, 0, 0}
 	};
 
-	if (cache && file_exists(cache_file.c_str())) {
-		FILE* cfp = fopen(cache_file.c_str(), "r");
-		if (fscanf(cfp, "%lu %lu", &count, &feat_num) != 2) {
-			throw std::runtime_error(std::string("Failed to load cache file"));
-		}
-		fclose(cfp);
-		printf("\tinstances=[%lu] features=[%lu] from=cache\n", count, feat_num);
-	} else {
-		read_feat_count();
-	}
-
-	if (cache) {
-		FILE* cfp = fopen(cache_file.c_str(), "w");
-		fprintf(cfp, "%lu\n%lu\n", count, feat_num);
-		fclose(cfp);
-	}
-
-	FtrlProximalTrainer learner(alpha, beta, l1, l2, feat_num, dropout);
-
-	auto train_one_iter = [&](size_t iter) {
-		rewind(fp);
-		size_t line_no = 0;
-		double loss = 0;
-		while(read_line(fp, line, max_line_len) != NULL) {
-			if (!parse_line(line, y, x)) continue;
-			double pred = learner.Update(x, y);
-			pred = std::max(std::min(pred, 1. - 10e-15), 10e-15);
-			loss += y > 0 ? -log(pred) : -log(1. - pred);
-			++line_no;
-
-			if (line_no % 100000 == 0) {
-				printf("epoch=%lu processed=[%.2f%%] time=[%lf] train-loss=%lf\r", iter, float(line_no) * 100. / float(count), timer.StopTimer(), loss / line_no);
-				fflush(stdout);
-			}
-		}
-
-		printf("epoch=%lu processed=[%.2f%%] time=[%lf] train-loss=%lf\r", iter, float(line_no) * 100. / float(count), timer.StopTimer(), loss / line_no);
-		fflush(stdout);
-		printf("\n");
-	};
-
-	auto predict_validation = [&] (const std::string& filename) {
-		FILE* vfp = fopen(filename.c_str(), "r");
-		size_t line_cnt = 0;
-		double loss = 0;
-		while(read_line(vfp, line, max_line_len) != NULL) {
-			if (!parse_line(line, y, x)) continue;
-			double pred = learner.Predict(x);
-			pred = std::max(std::min(pred, 1. - 10e-15), 10e-15);
-			loss += y > 0 ? -log(pred) : -log(1. - pred);
-			++line_cnt;
-		}
-
-		fclose(vfp);
-		if (line_cnt > 0)  loss /= line_cnt;
-		return loss;
-	};
-
-	for(size_t iter = 0; iter < epoch; ++iter) {
-		train_one_iter(iter);
-		if (test.size() > 0) {
-			double valid_loss = predict_validation(test);
-			printf("validation-loss=[%lf]\n\n", valid_loss);
-		}
-	}
-
-	learner.Save(model.c_str());
-	std::string model_detail = model + ".detail";
-	learner.SaveDetail(model_detail.c_str());
-
-	fclose(fp);
-	free((void *)line);
-	return true;
-}
-
-int main(int argc, char* argv[]) {
-	int ch;
-	
 	std::string input_file;
 	std::string test_file;
 	std::string model_file;
+	std::string start_from_model;
 
 	double alpha = DEFAULT_ALPHA;
 	double beta = DEFAULT_BETA;
 	double l1 = DEFAULT_L1;
 	double l2 = DEFAULT_L2;
 	double dropout = 0;
+
 	size_t epoch = 1;
-	bool cache = false;
-	
-	while( (ch = getopt(argc, argv, "f:t:m:a:b:d:l:e:i:ch")) != -1) {
-		switch(ch) {
+	bool cache = true;
+	size_t push_step = kPushStep;
+	size_t fetch_step = kFetchStep;
+	size_t num_threads = 1;
+
+	double burn_in_phase = 0;
+
+	bool double_precision = false;
+
+	while((opt = getopt_long(argc, argv, "f:t:m:ch", long_options, &opt_idx)) != -1) {
+		switch(opt) {
 		case 'f':
 			input_file = optarg;
 			break;
@@ -150,6 +80,12 @@ int main(int argc, char* argv[]) {
 			break;
 		case 'm':
 			model_file = optarg;
+			break;
+		case 'c':
+			cache = true;
+			break;
+		case 'i':
+			epoch = (size_t)atoi(optarg);
 			break;
 		case 'a':
 			alpha = atof(optarg);
@@ -166,25 +102,86 @@ int main(int argc, char* argv[]) {
 		case 'e':
 			l2 = atof(optarg);
 			break;
-		case 'i':
-			epoch = (size_t)atoi(optarg);
+		case 's':
+			push_step = (size_t)atoi(optarg);
+			fetch_step = push_step;
 			break;
-		case 'c':
-			cache = true;
+		case 'n':
+			num_threads = (size_t)atoi(optarg);
+			break;
+		case 'x':
+			double_precision = true;
+			break;
+		case 'u':
+			burn_in_phase = atof(optarg);
+			break;
+		case 'r':
+			start_from_model = optarg;
 			break;
 		case 'h':
 		default:
-			print_usage(argc, argv);
+			print_usage();
 			exit(0);
 		}
 	}
 
 	if (input_file.size() == 0 || model_file.size() == 0) {
-		print_usage(argc, argv);
+		print_usage();
 		exit(1);
 	}
 
-	train(input_file, model_file, test_file, alpha, beta, l1, l2, dropout, epoch, cache);
+	const char* ptest_file = NULL;
+	if (test_file.size() > 0) ptest_file = test_file.c_str();
+
+	if (double_precision) {
+		if (num_threads == 1) {
+			FtrlTrainer<double> trainer;
+			trainer.Initialize(epoch, cache);
+
+			if (start_from_model.size() > 0) {
+				trainer.Train(start_from_model.c_str(),
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			} else {
+				trainer.Train(alpha, beta, l1, l2, dropout,
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			}
+		} else {
+			FastFtrlTrainer<double> trainer;
+			trainer.Initialize(epoch, num_threads, cache, burn_in_phase, push_step, fetch_step);
+
+			if (start_from_model.size() > 0) {
+				trainer.Train(start_from_model.c_str(),
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			} else {
+				trainer.Train(alpha, beta, l1, l2, dropout,
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			}
+		}
+	} else {
+		if (num_threads == 1) {
+			FtrlTrainer<float> trainer;
+			trainer.Initialize(epoch, cache);
+
+			if (start_from_model.size() > 0) {
+				trainer.Train(start_from_model.c_str(),
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			} else {
+				trainer.Train(alpha, beta, l1, l2, dropout,
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			}
+		} else {
+			FastFtrlTrainer<float> trainer;
+			trainer.Initialize(epoch, num_threads, cache, burn_in_phase, push_step, fetch_step);
+
+			if (start_from_model.size() > 0) {
+				trainer.Train(start_from_model.c_str(),
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			} else {
+				trainer.Train(alpha, beta, l1, l2, dropout,
+					model_file.c_str(), input_file.c_str(), ptest_file);
+			}
+		}
+	}
 
 	return 0;
 }
