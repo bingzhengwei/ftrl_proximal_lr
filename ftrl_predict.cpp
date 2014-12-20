@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (cnt > 0) {
-		printf("Accuracy = %.2lf%% (%lu/%lu)\n", (double) correct / cnt * 100, correct, cnt);
+		printf("Accuracy = %.2lf%% (%zu/%zu)\n", (double) correct / cnt * 100, correct, cnt);
 		printf("Log-likelihood = %lf\n", loss / cnt);
 	}
 

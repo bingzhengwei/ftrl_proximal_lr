@@ -140,9 +140,9 @@ bool FtrlTrainer<T>::TrainImpl(const char* model_file, const char* train_file,
 		size_t line_cnt, const char* test_file) {
 	if (!init_) return false;
 
-	fprintf(stdout, "params={alpha:%.2f, beta:%.2f, l1:%.2f, l2:%.2f, dropout:%.2f, epoch:%lu}\n",
+	fprintf(stdout, "params={alpha:%.2f, beta:%.2f, l1:%.2f, l2:%.2f, dropout:%.2f, epoch:%zu}\n",
 		(float)solver_.alpha(), (float)solver_.beta(), (float)solver_.l1(),
-		(float)solver_.l2(), (float)solver_.dropout(), (uint64_t)epoch_);
+		(float)solver_.l2(), (float)solver_.dropout(), epoch_);
 
 	auto predict_func = [&] (std::vector<std::pair<size_t, T> >& x) {
 		return solver_.Predict(x);
@@ -164,16 +164,16 @@ bool FtrlTrainer<T>::TrainImpl(const char* model_file, const char* train_file,
 			++cur_cnt;
 
 			if (cur_cnt - last_cnt > 100000 && timer.StopTimer() - last_time > 0.5) {
-				fprintf(stdout, "epoch=%lu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
-					(uint64_t)iter, float(cur_cnt) * 100 / (float)line_cnt,
+				fprintf(stdout, "epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
+					iter, float(cur_cnt) * 100 / (float)line_cnt,
 					timer.ElapsedTime(), (float)loss / (float)cur_cnt);
 				fflush(stdout);
 				last_cnt = cur_cnt;
 				last_time = timer.ElapsedTime();
 			}
 		}
-		fprintf(stdout, "epoch=%lu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\n",
-				(uint64_t)iter, (float)cur_cnt*100 / (float)line_cnt,
+		fprintf(stdout, "epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\n",
+				iter, (float)cur_cnt*100 / (float)line_cnt,
 				timer.ElapsedTime(), (float)loss / (float)cur_cnt);
 
 		file_parser.CloseFile();
@@ -275,7 +275,7 @@ size_t read_problem_info(const char* train_file, bool read_cache,
 		parser.CloseFile();
 	}
 
-	fprintf(stdout, "\rinstances=[%lu] features=[%lu]\n", (uint64_t) line_cnt, (uint64_t) feat_num);
+	fprintf(stdout, "\rinstances=[%zu] features=[%zu]\n", line_cnt, feat_num);
 
 	if (read_cache && !cache_exists) {
 		write_to_cache(cache_file.c_str());
@@ -322,9 +322,9 @@ bool FastFtrlTrainer<T>::TrainImpl(const char* model_file, const char* train_fil
 		size_t line_cnt, const char* test_file) {
 	if (!init_) return false;
 
-	fprintf(stdout, "params={alpha:%.2f, beta:%.2f, l1:%.2f, l2:%.2f, dropout:%.2f, epoch:%lu}\n",
+	fprintf(stdout, "params={alpha:%.2f, beta:%.2f, l1:%.2f, l2:%.2f, dropout:%.2f, epoch:%zu}\n",
 		(float)param_server_.alpha(), (float)param_server_.beta(), (float)param_server_.l1(),
-		(float)param_server_.l2(), (float)param_server_.dropout(), (uint64_t)epoch_);
+		(float)param_server_.l2(), (float)param_server_.dropout(), epoch_);
 
 	FtrlWorker<T>* solvers = new FtrlWorker<T>[num_threads_];
 	for(size_t i = 0; i < num_threads_; ++i) {
@@ -359,8 +359,8 @@ bool FastFtrlTrainer<T>::TrainImpl(const char* model_file, const char* train_fil
 
 				if (i == 0 && local_count % 10000 == 0) {
 					size_t tmp_cnt = std::min(local_count * num_threads_, line_cnt);
-					fprintf(stdout, "epoch=%lu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
-							(uint64_t)iter, (float)tmp_cnt*100 / (float)line_cnt,
+					fprintf(stdout, "epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
+							iter, (float)tmp_cnt*100 / (float)line_cnt,
 							timer.StopTimer(), (float)local_loss / (float)local_count);
 					fflush(stdout);
 				}
@@ -408,8 +408,8 @@ bool FastFtrlTrainer<T>::TrainImpl(const char* model_file, const char* train_fil
 
 		file_parser.CloseFile();
 
-		fprintf(stdout, "epoch=%lu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\n",
-				(uint64_t)iter, (float)count*100 / (float)line_cnt,
+		fprintf(stdout, "epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\n",
+				iter, (float)count*100 / (float)line_cnt,
 				timer.StopTimer(), (float)loss / (float)count);
 
 		if (test_file) {
