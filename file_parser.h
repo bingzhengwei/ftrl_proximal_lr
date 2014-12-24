@@ -184,13 +184,14 @@ bool FileParser<T>::ParseSample(char* buf, T& y,
 	if (y < 0) y = 0;
 
 	x.clear();
+	x.push_back(std::make_pair((size_t)0, (T)1)); //add bias term
 	while(1) {
 		char *idx = strtok_r(NULL, ":", &ptr);
 		char *val = strtok_r(NULL, " \t", &ptr);
 		if (val == NULL) break;
 
 		bool error_found = false;
-		size_t k = (size_t) strtol(idx, &endptr, 10) - 1;
+		size_t k = (size_t) strtol(idx, &endptr, 10);
 		if(endptr == idx || *endptr != '\0' || (int) k < 0) {
 			error_found = true;
 		}

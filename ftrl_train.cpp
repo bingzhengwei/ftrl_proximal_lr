@@ -28,6 +28,37 @@ void print_usage() {
 	      );
 }
 
+template<typename T>
+bool train(const char* input_file, const char* test_file, const char* model_file,
+		const char* start_from_model, bool cache, T alpha, T beta, T l1, T l2, T dropout,
+		size_t epoch, size_t push_step, size_t fetch_step, size_t num_threads, T burn_in_phase) {
+	if (num_threads == 1) {
+		FtrlTrainer<T> trainer;
+		trainer.Initialize(epoch, cache);
+
+		if (start_from_model) {
+			trainer.Train(start_from_model,
+				model_file, input_file, test_file);
+		} else {
+			trainer.Train(alpha, beta, l1, l2, dropout,
+				model_file, input_file, test_file);
+		}
+	} else {
+		FastFtrlTrainer<T> trainer;
+		trainer.Initialize(epoch, num_threads, cache, burn_in_phase, push_step, fetch_step);
+
+		if (start_from_model) {
+			trainer.Train(start_from_model,
+				model_file, input_file, test_file);
+		} else {
+			trainer.Train(alpha, beta, l1, l2, dropout,
+				model_file, input_file, test_file);
+		}
+	}
+
+	return true;
+}
+
 int main (int argc, char* argv[]) {
 	int opt;
 	int opt_idx = 0;
@@ -132,55 +163,17 @@ int main (int argc, char* argv[]) {
 
 	const char* ptest_file = NULL;
 	if (test_file.size() > 0) ptest_file = test_file.c_str();
+	const char* pstart_from_model = NULL;
+	if (start_from_model.size() > 0) pstart_from_model = start_from_model.c_str();
 
 	if (double_precision) {
-		if (num_threads == 1) {
-			FtrlTrainer<double> trainer;
-			trainer.Initialize(epoch, cache);
-
-			if (start_from_model.size() > 0) {
-				trainer.Train(start_from_model.c_str(),
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			} else {
-				trainer.Train(alpha, beta, l1, l2, dropout,
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			}
-		} else {
-			FastFtrlTrainer<double> trainer;
-			trainer.Initialize(epoch, num_threads, cache, burn_in_phase, push_step, fetch_step);
-
-			if (start_from_model.size() > 0) {
-				trainer.Train(start_from_model.c_str(),
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			} else {
-				trainer.Train(alpha, beta, l1, l2, dropout,
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			}
-		}
+		train<double>(input_file.c_str(), ptest_file, model_file.c_str(),
+			pstart_from_model, cache, alpha, beta, l1, l2, dropout,
+			epoch, push_step, fetch_step, num_threads, burn_in_phase);
 	} else {
-		if (num_threads == 1) {
-			FtrlTrainer<float> trainer;
-			trainer.Initialize(epoch, cache);
-
-			if (start_from_model.size() > 0) {
-				trainer.Train(start_from_model.c_str(),
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			} else {
-				trainer.Train(alpha, beta, l1, l2, dropout,
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			}
-		} else {
-			FastFtrlTrainer<float> trainer;
-			trainer.Initialize(epoch, num_threads, cache, burn_in_phase, push_step, fetch_step);
-
-			if (start_from_model.size() > 0) {
-				trainer.Train(start_from_model.c_str(),
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			} else {
-				trainer.Train(alpha, beta, l1, l2, dropout,
-					model_file.c_str(), input_file.c_str(), ptest_file);
-			}
-		}
+		train<float>(input_file.c_str(), ptest_file, model_file.c_str(),
+			pstart_from_model, cache, alpha, beta, l1, l2, dropout,
+			epoch, push_step, fetch_step, num_threads, burn_in_phase);
 	}
 
 	return 0;
