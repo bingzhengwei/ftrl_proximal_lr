@@ -230,6 +230,8 @@ T FtrlWorker<T>::Update(std::vector<std::pair<size_t, T> >& x,
 			}
 		}
 		size_t idx = item.first;
+		if (idx >= FtrlSolver<T>::feat_num_) continue;
+
 		T val = FtrlSolver<T>::GetWeight(idx);
 		weights.push_back(std::make_pair(idx, val));
 		gradients.push_back(item.second);

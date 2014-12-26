@@ -178,6 +178,8 @@ T FtrlSolver<T>::Update(std::vector<std::pair<size_t, T> >& x, T y) {
 			}
 		}
 		size_t idx = item.first;
+		if (idx >= feat_num_) continue;
+
 		T val = GetWeight(idx);
 		weights.push_back(std::make_pair(idx, val));
 		gradients.push_back(item.second);
