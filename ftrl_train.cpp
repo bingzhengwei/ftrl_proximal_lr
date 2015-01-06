@@ -1,10 +1,30 @@
+// Copyright (c) 2014-2015 The AsyncFTRL Project
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #include <getopt.h>
 #include <unistd.h>
 #include <iostream>
 #include <locale>
-#include "util.h"
 #include "fast_ftrl_solver.h"
 #include "ftrl_train.h"
+#include "util.h"
 
 using namespace std;
 
@@ -12,7 +32,7 @@ void print_usage() {
 	printf("Usage: ./ftrl_train -f input_file -m model_file [options]\n"
 		"options:\n"
 		"-t test_file : set evaluation file\n"
-		//"--cache/-c : cache feature count and sample count of input file, default true\n"
+		// "--cache/-c : cache feature count and sample count of input file, default true\n"
 		"--epoch iteration : set number of iteration, default 1\n"
 		"--alpha alpha : set alpha param, default 0.15\n"
 		"--beta beta : set beta param, default 1\n"
@@ -20,7 +40,8 @@ void print_usage() {
 		"--l2 l2 : set l2 param, default 1\n"
 		"--dropout dropout : set dropout rate, default 0\n"
 		"--sync-step step : set push/fetch step of async ftrl, default 3\n"
-		"--burn-in fraction : set fraction of data used to burn-in with single thread on async model, default 0\n"
+		"--burn-in fraction : set fraction of data used to burn-in with single"
+		" thread on async model, default 0\n"
 		"--start-from model_file : set to continue training from model_file\n"
 		"--thread num : set thread num, default is single thread. 0 will use hardware concurrency\n"
 		"--double-precision : set to use double precision, default false\n"
@@ -59,25 +80,25 @@ bool train(const char* input_file, const char* test_file, const char* model_file
 	return true;
 }
 
-int main (int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 	int opt;
 	int opt_idx = 0;
 
 	static struct option long_options[] = {
-		{"epoch", required_argument, NULL, 'i'},
-		{"alpha", required_argument, NULL, 'a'},
-		{"beta", required_argument, NULL, 'b'},
-		{"dropout", required_argument, NULL, 'd'},
-		{"l1", required_argument, NULL, 'l'},
-		{"l2", required_argument, NULL, 'e'},
-		{"sync-step", required_argument, NULL, 's'},
-		{"burn-in", required_argument, NULL, 'u'},
-		{"cache", no_argument, NULL, 'c'},
-		{"start-from", required_argument, NULL, 'r'},
-		{"thread", required_argument, NULL, 'n'},
-		{"double-precision", no_argument, NULL, 'x'},
-		{"help", no_argument, NULL, 'h'},
-		{0, 0, 0, 0}
+		 {"epoch", required_argument, NULL, 'i'},
+		 {"alpha", required_argument, NULL, 'a'},
+		 {"beta", required_argument, NULL, 'b'},
+		 {"dropout", required_argument, NULL, 'd'},
+		 {"l1", required_argument, NULL, 'l'},
+		 {"l2", required_argument, NULL, 'e'},
+		 {"sync-step", required_argument, NULL, 's'},
+		 {"burn-in", required_argument, NULL, 'u'},
+		 {"cache", no_argument, NULL, 'c'},
+		 {"start-from", required_argument, NULL, 'r'},
+		 {"thread", required_argument, NULL, 'n'},
+		 {"double-precision", no_argument, NULL, 'x'},
+		 {"help", no_argument, NULL, 'h'},
+		 {0, 0, 0, 0}
 	};
 
 	std::string input_file;

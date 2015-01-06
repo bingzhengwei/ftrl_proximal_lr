@@ -1,12 +1,32 @@
-#ifndef __UTIL_H__
-#define __UTIL_H__
+// Copyright (c) 2014-2015 The AsyncFTRL Project
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
-#include <cstdlib>
+#ifndef UTIL_H
+#define UTIL_H
+
+#include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <future>
 #include <limits>
 #include <vector>
-#include <future>
-#include <algorithm>
 
 #define MAX_EXP_NUM 50.
 #define MIN_SIGMOID (10e-15)
@@ -85,12 +105,14 @@ inline bool util_less_equal(const T v1, const T v2) {
 
 template<typename T>
 inline T safe_exp(T x) {
-	return std::exp(std::max(std::min(x, (T)MAX_EXP_NUM), -(T)MAX_EXP_NUM));
+	T max_exp = static_cast<T>(MAX_EXP_NUM);
+	return std::exp(std::max(std::min(x, max_exp), -max_exp));
 }
 
 template<typename T>
 inline T sigmoid(T x) {
-	return (T)1. / ((T)1. + safe_exp(-x));
+	T one = 1.;
+	return one / (one + safe_exp(-x));
 }
 
-#endif // __UTIL_H__
+#endif // UTIL_H

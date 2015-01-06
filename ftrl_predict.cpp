@@ -1,8 +1,28 @@
+// Copyright (c) 2014-2015 The AsyncFTRL Project
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 #include <unistd.h>
 #include <cstdlib>
-#include "util.h"
-#include "ftrl_solver.h"
 #include "file_parser.h"
+#include "ftrl_solver.h"
+#include "util.h"
 
 void print_usage(int argc, char* argv[]) {
 	printf("Usage:\n");
@@ -11,12 +31,12 @@ void print_usage(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
 	int ch;
-	
+
 	std::string test_file;
 	std::string model_file;
 	std::string output_file;
-	
-	while( (ch = getopt(argc, argv, "t:m:o:h")) != -1) {
+
+	while((ch = getopt(argc, argv, "t:m:o:h")) != -1) {
 		switch(ch) {
 		case 't':
 			test_file = optarg;
@@ -42,8 +62,6 @@ int main(int argc, char* argv[]) {
 	LRModel<double> model;
 	model.Initialize(model_file.c_str());
 
-	int max_line_len = 10240;
-	char* line = (char *) malloc(sizeof(char) * max_line_len);
 	double y = 0.;
 	std::vector<std::pair<size_t, double> > x;
 	FILE* wfp = fopen(output_file.c_str(), "w");
@@ -70,11 +88,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (cnt > 0) {
-		printf("Accuracy = %.2lf%% (%zu/%zu)\n", (double) correct / cnt * 100, correct, cnt);
+		printf("Accuracy = %.2lf%% (%zu/%zu)\n",
+			static_cast<double>(correct) / cnt * 100, correct, cnt);
 		printf("Log-likelihood = %lf\n", loss / cnt);
 	}
 
-	free(line);
 	parser.CloseFile();
 	fclose(wfp);
 
