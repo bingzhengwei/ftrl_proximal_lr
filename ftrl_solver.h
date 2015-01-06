@@ -1,11 +1,36 @@
-#ifndef __FTRL_SOLVER_H__
-#define __FTRL_SOLVER_H__
+// Copyright (c) 2014-2015 The AsyncFTRL Project
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
+#ifndef FTRL_SOLVER_H
+#define FTRL_SOLVER_H
+
+#include <algorithm>
 #include <cstdlib>
-#include <vector>
-#include <random>
 #include <fstream>
+#include <functional>
 #include <iomanip>
+#include <limits>
+#include <random>
+#include <string>
+#include <utility>
+#include <vector>
 #include "util.h"
 
 #define DEFAULT_ALPHA 0.15
@@ -20,13 +45,18 @@ public:
 
 	virtual ~FtrlSolver();
 
-	virtual bool Initialize(T alpha, T beta, T l1,
-		T l2, size_t n, T dropout = 0);
+	virtual bool Initialize(
+		T alpha,
+		T beta,
+		T l1,
+		T l2,
+		size_t n,
+		T dropout = 0);
 
 	virtual bool Initialize(const char* path);
 
-	virtual T Update(std::vector<std::pair<size_t, T> >& x, T y);
-	virtual T Predict(std::vector<std::pair<size_t, T> >& x);
+	virtual T Update(const std::vector<std::pair<size_t, T> >& x, T y);
+	virtual T Predict(const std::vector<std::pair<size_t, T> >& x);
 
 	virtual bool SaveModelAll(const char* path);
 	virtual bool SaveModel(const char* path);
@@ -76,7 +106,7 @@ FtrlSolver<T>::~FtrlSolver() {
 	if (n_) {
 		delete [] n_;
 	}
-	
+
 	if (z_) {
 		delete [] z_;
 	}
@@ -90,8 +120,13 @@ void set_float_zero(T* x, size_t n) {
 }
 
 template<typename T>
-bool FtrlSolver<T>::Initialize(T alpha, T beta, T l1,
-		T l2, size_t n, T dropout) {
+bool FtrlSolver<T>::Initialize(
+		T alpha,
+		T beta,
+		T l1,
+		T l2,
+		size_t n,
+		T dropout) {
 	alpha_ = alpha;
 	beta_ = beta;
 	l1_ = l1;
@@ -163,7 +198,7 @@ T FtrlSolver<T>::GetWeight(size_t idx) {
 }
 
 template<typename T>
-T FtrlSolver<T>::Update(std::vector<std::pair<size_t, T> >& x, T y) {
+T FtrlSolver<T>::Update(const std::vector<std::pair<size_t, T> >& x, T y) {
 	if (!init_) return 0;
 
 	std::vector<std::pair<size_t, T> > weights;
@@ -188,8 +223,11 @@ T FtrlSolver<T>::Update(std::vector<std::pair<size_t, T> >& x, T y) {
 
 	T pred = sigmoid(wTx);
 	T grad = pred - y;
-	std::transform(gradients.begin(), gradients.end(), gradients.begin(),
-			std::bind1st(std::multiplies<T>(), grad));
+	std::transform(
+		gradients.begin(),
+		gradients.end(),
+		gradients.begin(),
+		std::bind1st(std::multiplies<T>(), grad));
 
 	for(size_t k = 0; k < weights.size(); ++k) {
 		size_t i = weights[k].first;
@@ -204,7 +242,7 @@ T FtrlSolver<T>::Update(std::vector<std::pair<size_t, T> >& x, T y) {
 }
 
 template<typename T>
-T FtrlSolver<T>::Predict(std::vector<std::pair<size_t, T> >& x) {
+T FtrlSolver<T>::Predict(const std::vector<std::pair<size_t, T> >& x) {
 	if (!init_) return 0;
 
 	T wTx = 0.;
@@ -253,7 +291,8 @@ bool FtrlSolver<T>::SaveModelDetail(const char* path) {
 	}
 
 	fout << std::fixed << std::setprecision(kPrecision);
-	fout << alpha_ << "\t" << beta_ << "\t" << l1_ << "\t" << l2_ << "\t" << feat_num_ << "\t" << dropout_ << "\n";
+	fout << alpha_ << "\t" << beta_ << "\t" << l1_ << "\t"
+		<< l2_ << "\t" << feat_num_ << "\t" << dropout_ << "\n";
 
 	for(size_t i = 0; i < feat_num_; ++i) {
 		fout << n_[i] << "\n";
@@ -283,7 +322,7 @@ public:
 
 	bool Initialize(const char* path);
 
-	T Predict(std::vector<std::pair<size_t, T> >& x);
+	T Predict(const std::vector<std::pair<size_t, T> >& x);
 private:
 	std::vector<T> model_;
 	bool init_;
@@ -315,7 +354,7 @@ bool LRModel<T>::Initialize(const char* path) {
 }
 
 template<typename T>
-T LRModel<T>::Predict(std::vector<std::pair<size_t, T> >& x) {
+T LRModel<T>::Predict(const std::vector<std::pair<size_t, T> >& x) {
 	if (!init_) return 0;
 
 	T wTx = 0.;
@@ -327,4 +366,4 @@ T LRModel<T>::Predict(std::vector<std::pair<size_t, T> >& x) {
 	return pred;
 }
 
-#endif // __FTRL_SOLVER_H__
+#endif // FTRL_SOLVER_H

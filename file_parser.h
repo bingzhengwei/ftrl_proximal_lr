@@ -1,9 +1,30 @@
-#ifndef __FILE_PARSER_H__
-#define __FILE_PARSER_H__
+// Copyright (c) 2014-2015 The AsyncFTRL Project
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
-#include <cstdlib>
+#ifndef FILE_PARSER_H
+#define FILE_PARSER_H
+
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <utility>
 #include <vector>
 #include "lock.h"
 
@@ -49,7 +70,7 @@ public:
 private:
 	// Read a new line using internal buffer and copy that to allocated new memory
 	char* ReadLine();
-	
+
 	char* ReadLineImpl(char *buf, size_t& buf_size);
 
 private:
@@ -62,6 +83,18 @@ private:
 	SpinLock lock_;
 };
 
+
+template<typename T>
+T* alloc_func(size_t size) {
+	void* ptr = malloc(size * sizeof(T));
+	return reinterpret_cast<T*>(ptr);
+}
+
+template<typename T>
+T* realloc_func(T* buf, size_t size) {
+	void* ptr = realloc(reinterpret_cast<void*>(buf), size * sizeof(T));
+	return reinterpret_cast<T*>(ptr);
+}
 
 
 template<typename T>
@@ -81,7 +114,7 @@ bool FileParserBase<T>::FileExists(const char* path) {
 template<typename T>
 FileParser<T>::FileParser() : file_desc_(NULL), buf_(NULL), buf_size_(0) {
 	buf_size_ = kDefaultBufSize;
-	buf_ = (char *) malloc(buf_size_ * sizeof(char));
+	buf_ = alloc_func<char>(buf_size_);
 }
 
 template<typename T>
@@ -99,7 +132,7 @@ FileParser<T>::~FileParser() {
 
 template<typename T>
 bool FileParser<T>::OpenFile(const char* path) {
-	file_desc_ = fopen(path, "r");	
+	file_desc_ = fopen(path, "r");
 
 	if (!file_desc_) {
 		return false;
@@ -123,14 +156,14 @@ char* FileParser<T>::ReadLineImpl(char* buf, size_t& buf_size) {
 	if (!file_desc_) {
 		return NULL;
 	}
-	
+
 	if (fgets(buf, buf_size - 1, file_desc_) == NULL) {
 		return NULL;
 	}
 
 	while(strrchr(buf, '\n') == NULL) {
 		buf_size *= 2;
-		buf = (char *) realloc(buf, buf_size * sizeof(char));
+		buf = realloc_func<char>(buf, buf_size);
 		size_t len = strlen(buf);
 		if (fgets(buf + len, buf_size - len - 1, file_desc_) == NULL) break;
 	}
@@ -184,7 +217,8 @@ bool FileParser<T>::ParseSample(char* buf, T& y,
 	if (y < 0) y = 0;
 
 	x.clear();
-	x.push_back(std::make_pair((size_t)0, (T)1)); //add bias term
+	// add bias term
+	x.push_back(std::make_pair((size_t)0, (T)1));
 	while(1) {
 		char *idx = strtok_r(NULL, ":", &ptr);
 		char *val = strtok_r(NULL, " \t", &ptr);
@@ -192,15 +226,15 @@ bool FileParser<T>::ParseSample(char* buf, T& y,
 
 		bool error_found = false;
 		size_t k = (size_t) strtol(idx, &endptr, 10);
-		if(endptr == idx || *endptr != '\0' || (int) k < 0) {
+		if(endptr == idx || *endptr != '\0' || static_cast<int>(k) < 0) {
 			error_found = true;
 		}
-		
+
 		T v = string_to_real<T> (val, &endptr);
 		if(endptr == val || (*endptr != '\0' && !isspace(*endptr))) {
 			error_found = true;
 		}
-		
+
 		if (!error_found) {
 			x.push_back(std::make_pair(k, v));
 		}
@@ -232,4 +266,4 @@ bool FileParser<T>::ReadSampleMultiThread(T& y,
 }
 
 
-#endif // __FILE_PARSER_H__
+#endif // FILE_PARSER_H

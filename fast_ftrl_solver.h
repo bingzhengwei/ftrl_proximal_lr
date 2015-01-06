@@ -1,6 +1,30 @@
-#ifndef __PARALLEL_FTRL_SOLVER_H__
-#define __PARALLEL_FTRL_SOLVER_H__
+// Copyright (c) 2014-2015 The AsyncFTRL Project
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
+#ifndef FAST_FTRL_SOLVER_H
+#define FAST_FTRL_SOLVER_H
+
+#include <algorithm>
+#include <functional>
+#include <utility>
+#include <vector>
 #include "ftrl_solver.h"
 #include "lock.h"
 
@@ -17,8 +41,13 @@ public:
 
 	virtual ~FtrlParamServer();
 
-	virtual bool Initialize(T alpha, T beta, T l1,
-		T l2, size_t n, T dropout = 0);
+	virtual bool Initialize(
+		T alpha,
+		T beta,
+		T l1,
+		T l2,
+		size_t n,
+		T dropout = 0);
 
 	virtual bool Initialize(const char* path);
 
@@ -40,22 +69,31 @@ public:
 
 	virtual ~FtrlWorker();
 
-	bool Initialize(FtrlParamServer<T>& param_server,
-		size_t push_step = kPushStep, size_t fetch_step = kFetchStep);
+	bool Initialize(
+		FtrlParamServer<T>* param_server,
+		size_t push_step = kPushStep,
+		size_t fetch_step = kFetchStep);
 
-	bool Reset(FtrlParamServer<T>& param_server);
+	bool Reset(FtrlParamServer<T>* param_server);
 
-	bool Initialize(T alpha, T beta, T l1,
-		T l2, size_t n, T dropout = 0) { return false; }
+	bool Initialize(
+		T alpha,
+		T beta,
+		T l1,
+		T l2,
+		size_t n,
+		T dropout = 0) { return false; }
 
 	bool Initialize(const char* path) { return false; }
 
-	T Update(std::vector<std::pair<size_t, T> >& x, T y) { return false; }
+	T Update(const std::vector<std::pair<size_t, T> >& x, T y) { return false; }
 
-	T Update(std::vector<std::pair<size_t, T> >& x,
-		T y, FtrlParamServer<T>& param_server);
+	T Update(
+		const std::vector<std::pair<size_t, T> >& x,
+		T y,
+		FtrlParamServer<T>* param_server);
 
-	bool PushParam(FtrlParamServer<T>& param_server);
+	bool PushParam(FtrlParamServer<T>* param_server);
 
 private:
 	size_t param_group_num_;
@@ -81,8 +119,13 @@ FtrlParamServer<T>::~FtrlParamServer() {
 }
 
 template<typename T>
-bool FtrlParamServer<T>::Initialize(T alpha, T beta, T l1,
-		T l2, size_t n, T dropout) {
+bool FtrlParamServer<T>::Initialize(
+		T alpha,
+		T beta,
+		T l1,
+		T l2,
+		size_t n,
+		T dropout) {
 	if(!FtrlSolver<T>::Initialize(alpha, beta, l1, l2, n, dropout)) {
 		return false;
 	}
@@ -166,20 +209,23 @@ FtrlWorker<T>::~FtrlWorker() {
 	if (n_update_) {
 		delete [] n_update_;
 	}
-	
+
 	if (z_update_) {
 		delete [] z_update_;
 	}
 }
 
 template<typename T>
-bool FtrlWorker<T>::Initialize(FtrlParamServer<T>& param_server, size_t push_step, size_t fetch_step) {
-	FtrlSolver<T>::alpha_ = param_server.alpha();
-	FtrlSolver<T>::beta_ = param_server.beta();
-	FtrlSolver<T>::l1_ = param_server.l1();
-	FtrlSolver<T>::l2_ = param_server.l2();
-	FtrlSolver<T>::feat_num_ = param_server.feat_num();
-	FtrlSolver<T>::dropout_ = param_server.dropout();
+bool FtrlWorker<T>::Initialize(
+		FtrlParamServer<T>* param_server,
+		size_t push_step,
+		size_t fetch_step) {
+	FtrlSolver<T>::alpha_ = param_server->alpha();
+	FtrlSolver<T>::beta_ = param_server->beta();
+	FtrlSolver<T>::l1_ = param_server->l1();
+	FtrlSolver<T>::l2_ = param_server->l2();
+	FtrlSolver<T>::feat_num_ = param_server->feat_num();
+	FtrlSolver<T>::dropout_ = param_server->dropout();
 
 	n_update_ = new T[FtrlSolver<T>::feat_num_];
 	z_update_ = new T[FtrlSolver<T>::feat_num_];
@@ -188,7 +234,7 @@ bool FtrlWorker<T>::Initialize(FtrlParamServer<T>& param_server, size_t push_ste
 
 	FtrlSolver<T>::n_ = new T[FtrlSolver<T>::feat_num_];
 	FtrlSolver<T>::z_ = new T[FtrlSolver<T>::feat_num_];
-	param_server.FetchParam(FtrlSolver<T>::n_, FtrlSolver<T>::z_);
+	param_server->FetchParam(FtrlSolver<T>::n_, FtrlSolver<T>::z_);
 
 	param_group_num_ = calc_group_num(FtrlSolver<T>::feat_num_);
 	param_group_step_ = new size_t[param_group_num_];
@@ -202,10 +248,10 @@ bool FtrlWorker<T>::Initialize(FtrlParamServer<T>& param_server, size_t push_ste
 }
 
 template<typename T>
-bool FtrlWorker<T>::Reset(FtrlParamServer<T>& param_server) {
+bool FtrlWorker<T>::Reset(FtrlParamServer<T>* param_server) {
 	if (!FtrlSolver<T>::init_) return 0;
 
-	param_server.FetchParam(FtrlSolver<T>::n_, FtrlSolver<T>::z_);
+	param_server->FetchParam(FtrlSolver<T>::n_, FtrlSolver<T>::z_);
 
 	for(size_t i = 0; i < param_group_num_; ++i) {
 		param_group_step_[i] = 0;
@@ -214,8 +260,10 @@ bool FtrlWorker<T>::Reset(FtrlParamServer<T>& param_server) {
 }
 
 template<typename T>
-T FtrlWorker<T>::Update(std::vector<std::pair<size_t, T> >& x,
-		T y, FtrlParamServer<T>& param_server) {
+T FtrlWorker<T>::Update(
+		const std::vector<std::pair<size_t, T> >& x,
+		T y,
+		FtrlParamServer<T>* param_server) {
 	if (!FtrlSolver<T>::init_) return 0;
 
 	std::vector<std::pair<size_t, T> > weights;
@@ -248,8 +296,10 @@ T FtrlWorker<T>::Update(std::vector<std::pair<size_t, T> >& x,
 		size_t g = i / kParamGroupSize;
 
 		if (param_group_step_[g] % fetch_step_ == 0) {
-			param_server.FetchParamGroup(FtrlSolver<T>::n_,
-				FtrlSolver<T>::z_, g);
+			param_server->FetchParamGroup(
+				FtrlSolver<T>::n_,
+				FtrlSolver<T>::z_,
+				g);
 		}
 
 		T w_i = weights[k].second;
@@ -260,9 +310,9 @@ T FtrlWorker<T>::Update(std::vector<std::pair<size_t, T> >& x,
 		FtrlSolver<T>::n_[i] += grad_i * grad_i;
 		z_update_[i] += grad_i - sigma * w_i;
 		n_update_[i] += grad_i * grad_i;
-		
+
 		if (param_group_step_[g] % push_step_ == 0) {
-			param_server.PushParamGroup(n_update_, z_update_, g);
+			param_server->PushParamGroup(n_update_, z_update_, g);
 		}
 
 		param_group_step_[g] += 1;
@@ -272,15 +322,15 @@ T FtrlWorker<T>::Update(std::vector<std::pair<size_t, T> >& x,
 }
 
 template<typename T>
-bool FtrlWorker<T>::PushParam(FtrlParamServer<T>& param_server) {
+bool FtrlWorker<T>::PushParam(FtrlParamServer<T>* param_server) {
 	if (!FtrlSolver<T>::init_) return false;
 
 	for(size_t i = 0; i < param_group_num_; ++i) {
-		param_server.PushParamGroup(n_update_, z_update_, i);
+		param_server->PushParamGroup(n_update_, z_update_, i);
 	}
 
 	return true;
 }
 
 
-#endif // __PARALLEL_FTRL_SOLVER_H__
+#endif // FAST_FTRL_SOLVER_H
