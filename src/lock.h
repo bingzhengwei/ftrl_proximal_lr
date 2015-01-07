@@ -30,7 +30,7 @@ public:
 	}
 
 	void lock() {
-		while(flag_.test_and_set(std::memory_order_acquire)) {
+		while (flag_.test_and_set(std::memory_order_acquire)) {
 		}
 	}
 

@@ -40,7 +40,7 @@ void util_parallel_run(const Func& func, size_t num_threads = 0) {
 	}
 
 	std::thread *threads = new std::thread[num_threads];
-	for(size_t i = 0; i < num_threads; ++i) {
+	for (size_t i = 0; i < num_threads; ++i) {
 		threads[i] = std::thread(func, i);
 	}
 

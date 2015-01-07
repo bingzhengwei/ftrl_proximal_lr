@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
 	std::string model_file;
 	std::string output_file;
 
-	while((ch = getopt(argc, argv, "t:m:o:h")) != -1) {
-		switch(ch) {
+	while ((ch = getopt(argc, argv, "t:m:o:h")) != -1) {
+		switch (ch) {
 		case 't':
 			test_file = optarg;
 			break;

@@ -161,7 +161,7 @@ char* FileParser<T>::ReadLineImpl(char* buf, size_t& buf_size) {
 		return NULL;
 	}
 
-	while(strrchr(buf, '\n') == NULL) {
+	while (strrchr(buf, '\n') == NULL) {
 		buf_size *= 2;
 		buf = realloc_func<char>(buf, buf_size);
 		size_t len = strlen(buf);
@@ -210,28 +210,28 @@ bool FileParser<T>::ParseSample(char* buf, T& y,
 
 	char *endptr, *ptr;
 	char *p = strtok_r(buf, " \t\n", &ptr);
-	if(p == NULL) return false;
+	if (p == NULL) return false;
 
 	y = string_to_real<T> (p, &endptr);
-	if(endptr == p || *endptr != '\0') return false;
+	if (endptr == p || *endptr != '\0') return false;
 	if (y < 0) y = 0;
 
 	x.clear();
 	// add bias term
 	x.push_back(std::make_pair((size_t)0, (T)1));
-	while(1) {
+	while (1) {
 		char *idx = strtok_r(NULL, ":", &ptr);
 		char *val = strtok_r(NULL, " \t", &ptr);
 		if (val == NULL) break;
 
 		bool error_found = false;
 		size_t k = (size_t) strtol(idx, &endptr, 10);
-		if(endptr == idx || *endptr != '\0' || static_cast<int>(k) < 0) {
+		if (endptr == idx || *endptr != '\0' || static_cast<int>(k) < 0) {
 			error_found = true;
 		}
 
 		T v = string_to_real<T> (val, &endptr);
-		if(endptr == val || (*endptr != '\0' && !isspace(*endptr))) {
+		if (endptr == val || (*endptr != '\0' && !isspace(*endptr))) {
 			error_found = true;
 		}
 
