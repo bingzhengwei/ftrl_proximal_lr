@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef STOPWATCH_H
-#define STOPWATCH_H
+#ifndef SRC_STOPWATCH_H
+#define SRC_STOPWATCH_H
 
 #include <chrono>
 
@@ -41,4 +41,4 @@ public:
 	double ElapsedTimeMS();
 };
 
-#endif // STOPWATCH_H
+#endif // SRC_STOPWATCH_H

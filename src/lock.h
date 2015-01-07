@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LOCK_H
-#define LOCK_H
+#ifndef SRC_LOCK_H
+#define SRC_LOCK_H
 
 #include <atomic>
 #include <mutex>
@@ -43,4 +43,4 @@ protected:
 	std::atomic_flag flag_;
 };
 
-#endif // LOCK_H
+#endif // SRC_LOCK_H

@@ -18,15 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FILE_PARSER_H
-#define FILE_PARSER_H
+#ifndef SRC_FILE_PARSER_H
+#define SRC_FILE_PARSER_H
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <utility>
 #include <vector>
-#include "lock.h"
+#include "src/lock.h"
 
 template<typename T>
 class FileParserBase {
@@ -266,4 +266,4 @@ bool FileParser<T>::ReadSampleMultiThread(T& y,
 }
 
 
-#endif // FILE_PARSER_H
+#endif // SRC_FILE_PARSER_H

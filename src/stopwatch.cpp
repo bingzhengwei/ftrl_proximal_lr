@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "stopwatch.h"
+#include "src/stopwatch.h"
 
 using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;

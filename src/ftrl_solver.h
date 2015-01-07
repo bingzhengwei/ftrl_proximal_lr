@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FTRL_SOLVER_H
-#define FTRL_SOLVER_H
+#ifndef SRC_FTRL_SOLVER_H
+#define SRC_FTRL_SOLVER_H
 
 #include <algorithm>
 #include <cstdlib>
@@ -31,7 +31,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "util.h"
+#include "src/util.h"
 
 #define DEFAULT_ALPHA 0.15
 #define DEFAULT_BETA 1.
@@ -366,4 +366,4 @@ T LRModel<T>::Predict(const std::vector<std::pair<size_t, T> >& x) {
 	return pred;
 }
 
-#endif // FTRL_SOLVER_H
+#endif // SRC_FTRL_SOLVER_H

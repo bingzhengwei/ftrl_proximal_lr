@@ -18,15 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FAST_FTRL_SOLVER_H
-#define FAST_FTRL_SOLVER_H
+#ifndef SRC_FAST_FTRL_SOLVER_H
+#define SRC_FAST_FTRL_SOLVER_H
 
 #include <algorithm>
 #include <functional>
 #include <utility>
 #include <vector>
-#include "ftrl_solver.h"
-#include "lock.h"
+#include "src/ftrl_solver.h"
+#include "src/lock.h"
 
 enum { kParamGroupSize = 10, kFetchStep = 3, kPushStep = 3 };
 
@@ -333,4 +333,4 @@ bool FtrlWorker<T>::PushParam(FtrlParamServer<T>* param_server) {
 }
 
 
-#endif // FAST_FTRL_SOLVER_H
+#endif // SRC_FAST_FTRL_SOLVER_H

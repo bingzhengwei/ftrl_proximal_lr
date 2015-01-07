@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FTRL_TRAIN_H
-#define FTRL_TRAIN_H
+#ifndef SRC_FTRL_TRAIN_H
+#define SRC_FTRL_TRAIN_H
 
 #include <algorithm>
 #include <cstdint>
@@ -27,10 +27,10 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "fast_ftrl_solver.h"
-#include "file_parser.h"
-#include "ftrl_solver.h"
-#include "stopwatch.h"
+#include "src/fast_ftrl_solver.h"
+#include "src/file_parser.h"
+#include "src/ftrl_solver.h"
+#include "src/stopwatch.h"
 
 template<typename T>
 size_t read_problem_info(
@@ -580,4 +580,4 @@ T evaluate_file(const char* path, const Func& func_predict, size_t num_threads) 
 }
 
 
-#endif // FTRL_TRAIN_H
+#endif // SRC_FTRL_TRAIN_H

@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef SRC_UTIL_H
+#define SRC_UTIL_H
 
 #include <algorithm>
 #include <cmath>
@@ -115,4 +115,4 @@ inline T sigmoid(T x) {
 	return one / (one + safe_exp(-x));
 }
 
-#endif // UTIL_H
+#endif // SRC_UTIL_H

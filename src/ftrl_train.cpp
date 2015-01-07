@@ -22,9 +22,9 @@
 #include <unistd.h>
 #include <iostream>
 #include <locale>
-#include "fast_ftrl_solver.h"
-#include "ftrl_train.h"
-#include "util.h"
+#include "src/fast_ftrl_solver.h"
+#include "src/ftrl_train.h"
+#include "src/util.h"
 
 using namespace std;
 

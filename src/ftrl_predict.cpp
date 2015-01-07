@@ -20,9 +20,9 @@
 
 #include <unistd.h>
 #include <cstdlib>
-#include "file_parser.h"
-#include "ftrl_solver.h"
-#include "util.h"
+#include "src/file_parser.h"
+#include "src/ftrl_solver.h"
+#include "src/util.h"
 
 void print_usage(int argc, char* argv[]) {
 	printf("Usage:\n");
