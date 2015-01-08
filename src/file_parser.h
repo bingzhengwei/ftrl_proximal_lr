@@ -267,3 +267,4 @@ bool FileParser<T>::ReadSampleMultiThread(T& y,
 
 
 #endif // SRC_FILE_PARSER_H
+/* vim: set ts=4 sw=4 tw=0 noet :*/
