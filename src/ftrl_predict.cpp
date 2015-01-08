@@ -20,9 +20,9 @@
 
 #include <unistd.h>
 #include <cstdlib>
-#include "file_parser.h"
-#include "ftrl_solver.h"
-#include "util.h"
+#include "src/file_parser.h"
+#include "src/ftrl_solver.h"
+#include "src/util.h"
 
 void print_usage(int argc, char* argv[]) {
 	printf("Usage:\n");
@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
 	std::string model_file;
 	std::string output_file;
 
-	while((ch = getopt(argc, argv, "t:m:o:h")) != -1) {
-		switch(ch) {
+	while ((ch = getopt(argc, argv, "t:m:o:h")) != -1) {
+		switch (ch) {
 		case 't':
 			test_file = optarg;
 			break;

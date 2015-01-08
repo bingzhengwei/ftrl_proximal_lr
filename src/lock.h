@@ -18,39 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include "stopwatch.h"
+#ifndef SRC_LOCK_H
+#define SRC_LOCK_H
 
-using std::chrono::duration_cast;
-using std::chrono::high_resolution_clock;
-using std::chrono::microseconds;
+#include <atomic>
+#include <mutex>
 
-double StopWatch::ToSeconds() {
-	auto duration = duration_cast<microseconds>(stop_ - start_).count();
-	return static_cast<double>(duration) / static_cast<double>(1000000.0);
-}
+class SpinLock {
+public:
+	SpinLock() : flag_ {ATOMIC_FLAG_INIT} {
+	}
 
-double StopWatch::ToMicroSeconds() {
-	auto duration = duration_cast<microseconds>(stop_ - start_).count();
-	return static_cast<double>(duration);
-}
+	void lock() {
+		while (flag_.test_and_set(std::memory_order_acquire)) {
+		}
+	}
 
-StopWatch::StopWatch() {
-	StartTimer();
-}
+	void unlock() {
+		flag_.clear(std::memory_order_release);
+	}
 
-void StopWatch::StartTimer() {
-	start_ = high_resolution_clock::now();
-}
 
-double StopWatch::StopTimer() {
-	stop_ = high_resolution_clock::now();
-	return ToSeconds();
-}
+protected:
+	std::atomic_flag flag_;
+};
 
-double StopWatch::ElapsedTime() {
-	return ToSeconds();
-}
-
-double StopWatch::ElapsedTimeMS() {
-	return ToMicroSeconds();
-}
+#endif // SRC_LOCK_H

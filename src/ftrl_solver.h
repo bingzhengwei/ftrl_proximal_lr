@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FTRL_SOLVER_H
-#define FTRL_SOLVER_H
+#ifndef SRC_FTRL_SOLVER_H
+#define SRC_FTRL_SOLVER_H
 
 #include <algorithm>
 #include <cstdlib>
@@ -31,7 +31,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "util.h"
+#include "src/util.h"
 
 #define DEFAULT_ALPHA 0.15
 #define DEFAULT_BETA 1.
@@ -114,7 +114,7 @@ FtrlSolver<T>::~FtrlSolver() {
 
 template<typename T>
 void set_float_zero(T* x, size_t n) {
-	for(size_t i = 0; i < n; ++i) {
+	for (size_t i = 0; i < n; ++i) {
 		x[i] = 0;
 	}
 }
@@ -159,7 +159,7 @@ bool FtrlSolver<T>::Initialize(const char* path) {
 	n_ = new T[feat_num_];
 	z_ = new T[feat_num_];
 
-	for(size_t i = 0; i < feat_num_; ++i) {
+	for (size_t i = 0; i < feat_num_; ++i) {
 		fin >> n_[i];
 		if (!fin || fin.eof()) {
 			fin.close();
@@ -167,7 +167,7 @@ bool FtrlSolver<T>::Initialize(const char* path) {
 		}
 	}
 
-	for(size_t i = 0; i < feat_num_; ++i) {
+	for (size_t i = 0; i < feat_num_; ++i) {
 		fin >> z_[i];
 		if (!fin || fin.eof()) {
 			fin.close();
@@ -205,7 +205,7 @@ T FtrlSolver<T>::Update(const std::vector<std::pair<size_t, T> >& x, T y) {
 	std::vector<T> gradients;
 	T wTx = 0.;
 
-	for(auto& item : x) {
+	for (auto& item : x) {
 		if (util_greater(dropout_, (T)0)) {
 			T rand_prob = uniform_dist_(rand_generator_);
 			if (rand_prob < dropout_) {
@@ -229,7 +229,7 @@ T FtrlSolver<T>::Update(const std::vector<std::pair<size_t, T> >& x, T y) {
 		gradients.begin(),
 		std::bind1st(std::multiplies<T>(), grad));
 
-	for(size_t k = 0; k < weights.size(); ++k) {
+	for (size_t k = 0; k < weights.size(); ++k) {
 		size_t i = weights[k].first;
 		T w_i = weights[k].second;
 		T grad_i = gradients[k];
@@ -246,7 +246,7 @@ T FtrlSolver<T>::Predict(const std::vector<std::pair<size_t, T> >& x) {
 	if (!init_) return 0;
 
 	T wTx = 0.;
-	for(auto& item : x) {
+	for (auto& item : x) {
 		size_t idx = item.first;
 		T val = GetWeight(idx);
 		wTx += val * item.second;
@@ -269,7 +269,7 @@ bool FtrlSolver<T>::SaveModel(const char* path) {
 	}
 
 	fout << std::fixed << std::setprecision(kPrecision);
-	for(size_t i = 0; i < feat_num_; ++i) {
+	for (size_t i = 0; i < feat_num_; ++i) {
 		T w = GetWeight(i);
 		fout << w << "\n";
 	}
@@ -294,11 +294,11 @@ bool FtrlSolver<T>::SaveModelDetail(const char* path) {
 	fout << alpha_ << "\t" << beta_ << "\t" << l1_ << "\t"
 		<< l2_ << "\t" << feat_num_ << "\t" << dropout_ << "\n";
 
-	for(size_t i = 0; i < feat_num_; ++i) {
+	for (size_t i = 0; i < feat_num_; ++i) {
 		fout << n_[i] << "\n";
 	}
 
-	for(size_t i = 0; i < feat_num_; ++i) {
+	for (size_t i = 0; i < feat_num_; ++i) {
 		fout << z_[i] << "\n";
 	}
 
@@ -358,7 +358,7 @@ T LRModel<T>::Predict(const std::vector<std::pair<size_t, T> >& x) {
 	if (!init_) return 0;
 
 	T wTx = 0.;
-	for(auto& item : x) {
+	for (auto& item : x) {
 		if (item.first >= model_.size()) continue;
 		wTx += model_[item.first] * item.second;
 	}
@@ -366,4 +366,4 @@ T LRModel<T>::Predict(const std::vector<std::pair<size_t, T> >& x) {
 	return pred;
 }
 
-#endif // FTRL_SOLVER_H
+#endif // SRC_FTRL_SOLVER_H

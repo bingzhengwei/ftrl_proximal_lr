@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FTRL_TRAIN_H
-#define FTRL_TRAIN_H
+#ifndef SRC_FTRL_TRAIN_H
+#define SRC_FTRL_TRAIN_H
 
 #include <algorithm>
 #include <cstdint>
@@ -27,10 +27,10 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "fast_ftrl_solver.h"
-#include "file_parser.h"
-#include "ftrl_solver.h"
-#include "stopwatch.h"
+#include "src/fast_ftrl_solver.h"
+#include "src/file_parser.h"
+#include "src/ftrl_solver.h"
+#include "src/stopwatch.h"
 
 template<typename T>
 size_t read_problem_info(
@@ -228,14 +228,14 @@ bool FtrlTrainer<T>::TrainImpl(
 	T loss = 0;
 	StopWatch timer;
 	double last_time = 0;
-	for(size_t iter = 0; iter < epoch_; ++iter) {
+	for (size_t iter = 0; iter < epoch_; ++iter) {
 		FileParser<T> file_parser;
 		file_parser.OpenFile(train_file);
 		std::vector<std::pair<size_t, T> > x;
 		T y;
 
 		size_t cur_cnt = 0, last_cnt = 0;
-		while(file_parser.ReadSample(y, x)) {
+		while (file_parser.ReadSample(y, x)) {
 			T pred = solver_.Update(x, y);
 			loss += calc_loss(y, pred);
 			++cur_cnt;
@@ -344,7 +344,7 @@ size_t read_problem_info(
 		T local_y;
 		while (1) {
 			if (!parser.ReadSampleMultiThread(local_y, local_x)) break;
-			for(auto& item : local_x) {
+			for (auto& item : local_x) {
 				if (item.first + 1 > local_max_feat) local_max_feat = item.first + 1;
 			}
 			++local_count;
@@ -437,7 +437,7 @@ bool FastFtrlTrainer<T>::TrainImpl(
 		epoch_);
 
 	FtrlWorker<T>* solvers = new FtrlWorker<T>[num_threads_];
-	for(size_t i = 0; i < num_threads_; ++i) {
+	for (size_t i = 0; i < num_threads_; ++i) {
 		solvers[i].Initialize(&param_server_, push_step_, fetch_step_);
 	}
 
@@ -446,7 +446,7 @@ bool FastFtrlTrainer<T>::TrainImpl(
 	};
 
 	StopWatch timer;
-	for(size_t iter = 0; iter < epoch_; ++iter) {
+	for (size_t iter = 0; iter < epoch_; ++iter) {
 		FileParser<T> file_parser;
 		file_parser.OpenFile(train_file);
 		size_t count = 0;
@@ -458,7 +458,7 @@ bool FastFtrlTrainer<T>::TrainImpl(
 			T y;
 			size_t local_count = 0;
 			T local_loss = 0;
-			while(1) {
+			while (1) {
 				if (!file_parser.ReadSampleMultiThread(y, x)) {
 					break;
 				}
@@ -492,7 +492,7 @@ bool FastFtrlTrainer<T>::TrainImpl(
 			std::vector<std::pair<size_t, T> > x;
 			T y;
 			T local_loss = 0;
-			for(size_t i = 0; i < burn_in_cnt; ++i) {
+			for (size_t i = 0; i < burn_in_cnt; ++i) {
 				if (!file_parser.ReadSample(y, x)) {
 					break;
 				}
@@ -520,7 +520,7 @@ bool FastFtrlTrainer<T>::TrainImpl(
 			if (util_equal(burn_in_, (T)1)) continue;
 		}
 
-		for(size_t i = 0; i < num_threads_; ++i) {
+		for (size_t i = 0; i < num_threads_; ++i) {
 			solvers[i].Reset(&param_server_);
 		}
 
@@ -580,4 +580,4 @@ T evaluate_file(const char* path, const Func& func_predict, size_t num_threads) 
 }
 
 
-#endif // FTRL_TRAIN_H
+#endif // SRC_FTRL_TRAIN_H

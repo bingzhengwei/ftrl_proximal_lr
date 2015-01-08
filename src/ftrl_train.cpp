@@ -22,9 +22,9 @@
 #include <unistd.h>
 #include <iostream>
 #include <locale>
-#include "fast_ftrl_solver.h"
-#include "ftrl_train.h"
-#include "util.h"
+#include "src/fast_ftrl_solver.h"
+#include "src/ftrl_train.h"
+#include "src/util.h"
 
 using namespace std;
 
@@ -46,7 +46,7 @@ void print_usage() {
 		"--thread num : set thread num, default is single thread. 0 will use hardware concurrency\n"
 		"--double-precision : set to use double precision, default false\n"
 		"--help : print this help\n"
-	      );
+	);
 }
 
 template<typename T>
@@ -85,20 +85,20 @@ int main(int argc, char* argv[]) {
 	int opt_idx = 0;
 
 	static struct option long_options[] = {
-		 {"epoch", required_argument, NULL, 'i'},
-		 {"alpha", required_argument, NULL, 'a'},
-		 {"beta", required_argument, NULL, 'b'},
-		 {"dropout", required_argument, NULL, 'd'},
-		 {"l1", required_argument, NULL, 'l'},
-		 {"l2", required_argument, NULL, 'e'},
-		 {"sync-step", required_argument, NULL, 's'},
-		 {"burn-in", required_argument, NULL, 'u'},
-		 {"cache", no_argument, NULL, 'c'},
-		 {"start-from", required_argument, NULL, 'r'},
-		 {"thread", required_argument, NULL, 'n'},
-		 {"double-precision", no_argument, NULL, 'x'},
-		 {"help", no_argument, NULL, 'h'},
-		 {0, 0, 0, 0}
+		{"epoch", required_argument, NULL, 'i'},
+		{"alpha", required_argument, NULL, 'a'},
+		{"beta", required_argument, NULL, 'b'},
+		{"dropout", required_argument, NULL, 'd'},
+		{"l1", required_argument, NULL, 'l'},
+		{"l2", required_argument, NULL, 'e'},
+		{"sync-step", required_argument, NULL, 's'},
+		{"burn-in", required_argument, NULL, 'u'},
+		{"cache", no_argument, NULL, 'c'},
+		{"start-from", required_argument, NULL, 'r'},
+		{"thread", required_argument, NULL, 'n'},
+		{"double-precision", no_argument, NULL, 'x'},
+		{"help", no_argument, NULL, 'h'},
+		{0, 0, 0, 0}
 	};
 
 	std::string input_file;
@@ -122,8 +122,8 @@ int main(int argc, char* argv[]) {
 
 	bool double_precision = false;
 
-	while((opt = getopt_long(argc, argv, "f:t:m:ch", long_options, &opt_idx)) != -1) {
-		switch(opt) {
+	while ((opt = getopt_long(argc, argv, "f:t:m:ch", long_options, &opt_idx)) != -1) {
+		switch (opt) {
 		case 'f':
 			input_file = optarg;
 			break;

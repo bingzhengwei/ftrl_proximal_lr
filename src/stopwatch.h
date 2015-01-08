@@ -18,29 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef LOCK_H
-#define LOCK_H
+#ifndef SRC_STOPWATCH_H
+#define SRC_STOPWATCH_H
 
-#include <atomic>
-#include <mutex>
+#include <chrono>
 
-class SpinLock {
-public:
-	SpinLock() : flag_ {ATOMIC_FLAG_INIT} {
-	}
-
-	void lock() {
-		while(flag_.test_and_set(std::memory_order_acquire)) {
-		}
-	}
-
-	void unlock() {
-		flag_.clear(std::memory_order_release);
-	}
-
+class StopWatch {
+protected:
+	std::chrono::high_resolution_clock::time_point start_;
+	std::chrono::high_resolution_clock::time_point stop_;
 
 protected:
-	std::atomic_flag flag_;
+	double ToSeconds();
+	double ToMicroSeconds();
+
+public:
+	StopWatch();
+
+	void StartTimer();
+	double StopTimer();
+	double ElapsedTime();
+	double ElapsedTimeMS();
 };
 
-#endif // LOCK_H
+#endif // SRC_STOPWATCH_H

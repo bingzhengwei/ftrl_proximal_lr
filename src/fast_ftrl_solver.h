@@ -18,15 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef FAST_FTRL_SOLVER_H
-#define FAST_FTRL_SOLVER_H
+#ifndef SRC_FAST_FTRL_SOLVER_H
+#define SRC_FAST_FTRL_SOLVER_H
 
 #include <algorithm>
 #include <functional>
 #include <utility>
 #include <vector>
-#include "ftrl_solver.h"
-#include "lock.h"
+#include "src/ftrl_solver.h"
+#include "src/lock.h"
 
 enum { kParamGroupSize = 10, kFetchStep = 3, kPushStep = 3 };
 
@@ -126,7 +126,7 @@ bool FtrlParamServer<T>::Initialize(
 		T l2,
 		size_t n,
 		T dropout) {
-	if(!FtrlSolver<T>::Initialize(alpha, beta, l1, l2, n, dropout)) {
+	if (!FtrlSolver<T>::Initialize(alpha, beta, l1, l2, n, dropout)) {
 		return false;
 	}
 
@@ -139,7 +139,7 @@ bool FtrlParamServer<T>::Initialize(
 
 template<typename T>
 bool FtrlParamServer<T>::Initialize(const char* path) {
-	if(!FtrlSolver<T>::Initialize(path)) {
+	if (!FtrlSolver<T>::Initialize(path)) {
 		return false;
 	}
 
@@ -158,7 +158,7 @@ bool FtrlParamServer<T>::FetchParamGroup(T* n, T* z, size_t group) {
 	size_t end = std::min((group + 1) * kParamGroupSize, FtrlSolver<T>::feat_num_);
 
 	std::lock_guard<SpinLock> lock(lock_slots_[group]);
-	for(size_t i = start; i < end; ++i) {
+	for (size_t i = start; i < end; ++i) {
 		n[i] = FtrlSolver<T>::n_[i];
 		z[i] = FtrlSolver<T>::z_[i];
 	}
@@ -170,7 +170,7 @@ template<typename T>
 bool FtrlParamServer<T>::FetchParam(T* n, T* z) {
 	if (!FtrlSolver<T>::init_) return false;
 
-	for(size_t i = 0; i < param_group_num_; ++i) {
+	for (size_t i = 0; i < param_group_num_; ++i) {
 		FetchParamGroup(n, z, i);
 	}
 	return true;
@@ -184,7 +184,7 @@ bool FtrlParamServer<T>::PushParamGroup(T* n, T* z, size_t group) {
 	size_t end = std::min((group + 1) * kParamGroupSize, FtrlSolver<T>::feat_num_);
 
 	std::lock_guard<SpinLock> lock(lock_slots_[group]);
-	for(size_t i = start; i < end; ++i) {
+	for (size_t i = start; i < end; ++i) {
 		FtrlSolver<T>::n_[i] += n[i];
 		FtrlSolver<T>::z_[i] += z[i];
 		n[i] = 0;
@@ -238,7 +238,7 @@ bool FtrlWorker<T>::Initialize(
 
 	param_group_num_ = calc_group_num(FtrlSolver<T>::feat_num_);
 	param_group_step_ = new size_t[param_group_num_];
-	for(size_t i = 0; i < param_group_num_; ++i) param_group_step_[i] = 0;
+	for (size_t i = 0; i < param_group_num_; ++i) param_group_step_[i] = 0;
 
 	push_step_ = push_step;
 	fetch_step_ = fetch_step;
@@ -253,7 +253,7 @@ bool FtrlWorker<T>::Reset(FtrlParamServer<T>* param_server) {
 
 	param_server->FetchParam(FtrlSolver<T>::n_, FtrlSolver<T>::z_);
 
-	for(size_t i = 0; i < param_group_num_; ++i) {
+	for (size_t i = 0; i < param_group_num_; ++i) {
 		param_group_step_[i] = 0;
 	}
 	return true;
@@ -270,7 +270,7 @@ T FtrlWorker<T>::Update(
 	std::vector<T> gradients;
 	T wTx = 0.;
 
-	for(auto& item : x) {
+	for (auto& item : x) {
 		if (util_greater(FtrlSolver<T>::dropout_, (T)0)) {
 			T rand_prob = FtrlSolver<T>::uniform_dist_(FtrlSolver<T>::rand_generator_);
 			if (rand_prob < FtrlSolver<T>::dropout_) {
@@ -291,7 +291,7 @@ T FtrlWorker<T>::Update(
 	std::transform(gradients.begin(), gradients.end(), gradients.begin(),
 			std::bind1st(std::multiplies<T>(), grad));
 
-	for(size_t k = 0; k < weights.size(); ++k) {
+	for (size_t k = 0; k < weights.size(); ++k) {
 		size_t i = weights[k].first;
 		size_t g = i / kParamGroupSize;
 
@@ -325,7 +325,7 @@ template<typename T>
 bool FtrlWorker<T>::PushParam(FtrlParamServer<T>* param_server) {
 	if (!FtrlSolver<T>::init_) return false;
 
-	for(size_t i = 0; i < param_group_num_; ++i) {
+	for (size_t i = 0; i < param_group_num_; ++i) {
 		param_server->PushParamGroup(n_update_, z_update_, i);
 	}
 
@@ -333,4 +333,4 @@ bool FtrlWorker<T>::PushParam(FtrlParamServer<T>* param_server) {
 }
 
 
-#endif // FAST_FTRL_SOLVER_H
+#endif // SRC_FAST_FTRL_SOLVER_H

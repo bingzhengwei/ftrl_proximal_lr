@@ -18,27 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef STOPWATCH_H
-#define STOPWATCH_H
+#include "src/stopwatch.h"
 
-#include <chrono>
+using std::chrono::duration_cast;
+using std::chrono::high_resolution_clock;
+using std::chrono::microseconds;
 
-class StopWatch {
-protected:
-	std::chrono::high_resolution_clock::time_point start_;
-	std::chrono::high_resolution_clock::time_point stop_;
+double StopWatch::ToSeconds() {
+	auto duration = duration_cast<microseconds>(stop_ - start_).count();
+	return static_cast<double>(duration) / static_cast<double>(1000000.0);
+}
 
-protected:
-	double ToSeconds();
-	double ToMicroSeconds();
+double StopWatch::ToMicroSeconds() {
+	auto duration = duration_cast<microseconds>(stop_ - start_).count();
+	return static_cast<double>(duration);
+}
 
-public:
-	StopWatch();
+StopWatch::StopWatch() {
+	StartTimer();
+}
 
-	void StartTimer();
-	double StopTimer();
-	double ElapsedTime();
-	double ElapsedTimeMS();
-};
+void StopWatch::StartTimer() {
+	start_ = high_resolution_clock::now();
+}
 
-#endif // STOPWATCH_H
+double StopWatch::StopTimer() {
+	stop_ = high_resolution_clock::now();
+	return ToSeconds();
+}
+
+double StopWatch::ElapsedTime() {
+	return ToSeconds();
+}
+
+double StopWatch::ElapsedTimeMS() {
+	return ToMicroSeconds();
+}

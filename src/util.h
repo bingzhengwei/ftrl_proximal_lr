@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef SRC_UTIL_H
+#define SRC_UTIL_H
 
 #include <algorithm>
 #include <cmath>
@@ -40,7 +40,7 @@ void util_parallel_run(const Func& func, size_t num_threads = 0) {
 	}
 
 	std::thread *threads = new std::thread[num_threads];
-	for(size_t i = 0; i < num_threads; ++i) {
+	for (size_t i = 0; i < num_threads; ++i) {
 		threads[i] = std::thread(func, i);
 	}
 
@@ -115,4 +115,4 @@ inline T sigmoid(T x) {
 	return one / (one + safe_exp(-x));
 }
 
-#endif // UTIL_H
+#endif // SRC_UTIL_H
