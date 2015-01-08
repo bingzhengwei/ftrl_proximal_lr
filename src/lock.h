@@ -44,3 +44,4 @@ protected:
 };
 
 #endif // SRC_LOCK_H
+/* vim: set ts=4 sw=4 tw=0 noet :*/

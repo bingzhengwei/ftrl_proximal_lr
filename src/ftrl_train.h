@@ -581,3 +581,4 @@ T evaluate_file(const char* path, const Func& func_predict, size_t num_threads) 
 
 
 #endif // SRC_FTRL_TRAIN_H
+/* vim: set ts=4 sw=4 tw=0 noet :*/

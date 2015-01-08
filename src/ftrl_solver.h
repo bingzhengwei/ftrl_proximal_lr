@@ -367,3 +367,4 @@ T LRModel<T>::Predict(const std::vector<std::pair<size_t, T> >& x) {
 }
 
 #endif // SRC_FTRL_SOLVER_H
+/* vim: set ts=4 sw=4 tw=0 noet :*/

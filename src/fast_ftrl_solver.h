@@ -334,3 +334,4 @@ bool FtrlWorker<T>::PushParam(FtrlParamServer<T>* param_server) {
 
 
 #endif // SRC_FAST_FTRL_SOLVER_H
+/* vim: set ts=4 sw=4 tw=0 noet :*/

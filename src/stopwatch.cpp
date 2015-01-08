@@ -54,3 +54,4 @@ double StopWatch::ElapsedTime() {
 double StopWatch::ElapsedTimeMS() {
 	return ToMicroSeconds();
 }
+/* vim: set ts=4 sw=4 tw=0 noet :*/

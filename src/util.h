@@ -116,3 +116,4 @@ inline T sigmoid(T x) {
 }
 
 #endif // SRC_UTIL_H
+/* vim: set ts=4 sw=4 tw=0 noet :*/
