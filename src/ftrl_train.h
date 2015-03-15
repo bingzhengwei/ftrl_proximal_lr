@@ -225,7 +225,6 @@ bool FtrlTrainer<T>::TrainImpl(
 		return solver_.Predict(x);
 	};
 
-	T loss = 0;
 	StopWatch timer;
 	double last_time = 0;
 	for (size_t iter = 0; iter < epoch_; ++iter) {
@@ -235,6 +234,7 @@ bool FtrlTrainer<T>::TrainImpl(
 		T y;
 
 		size_t cur_cnt = 0, last_cnt = 0;
+		T loss = 0;
 		while (file_parser.ReadSample(y, x)) {
 			T pred = solver_.Update(x, y);
 			loss += calc_loss(y, pred);
