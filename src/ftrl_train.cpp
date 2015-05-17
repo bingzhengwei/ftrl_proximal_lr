@@ -44,6 +44,7 @@ void print_usage() {
 		" thread on async model, default 0\n"
 		"--start-from model_file : set to continue training from model_file\n"
 		"--thread num : set thread num, default is single thread. 0 will use hardware concurrency\n"
+		"--lock-free : lock-free multi-thread mode\n"
 		"--double-precision : set to use double precision, default false\n"
 		"--help : print this help\n"
 	);
@@ -52,10 +53,22 @@ void print_usage() {
 template<typename T>
 bool train(const char* input_file, const char* test_file, const char* model_file,
 		const char* start_from_model, bool cache, T alpha, T beta, T l1, T l2, T dropout,
-		size_t epoch, size_t push_step, size_t fetch_step, size_t num_threads, T burn_in_phase) {
+		size_t epoch, size_t push_step, size_t fetch_step, size_t num_threads, T burn_in_phase,
+		bool lock_free) {
 	if (num_threads == 1) {
 		FtrlTrainer<T> trainer;
 		trainer.Initialize(epoch, cache);
+
+		if (start_from_model) {
+			trainer.Train(start_from_model,
+				model_file, input_file, test_file);
+		} else {
+			trainer.Train(alpha, beta, l1, l2, dropout,
+				model_file, input_file, test_file);
+		}
+	} else if (lock_free) {
+		LockFreeFtrlTrainer<T> trainer;
+		trainer.Initialize(epoch, num_threads, cache);
 
 		if (start_from_model) {
 			trainer.Train(start_from_model,
@@ -96,6 +109,7 @@ int main(int argc, char* argv[]) {
 		{"cache", no_argument, NULL, 'c'},
 		{"start-from", required_argument, NULL, 'r'},
 		{"thread", required_argument, NULL, 'n'},
+		{"lock-free", no_argument, NULL, 'q'},
 		{"double-precision", no_argument, NULL, 'x'},
 		{"help", no_argument, NULL, 'h'},
 		{0, 0, 0, 0}
@@ -117,6 +131,7 @@ int main(int argc, char* argv[]) {
 	size_t push_step = kPushStep;
 	size_t fetch_step = kFetchStep;
 	size_t num_threads = 1;
+	bool lock_free = false;
 
 	double burn_in_phase = 0;
 
@@ -164,6 +179,9 @@ int main(int argc, char* argv[]) {
 		case 'x':
 			double_precision = true;
 			break;
+		case 'q':
+			lock_free = true;
+			break;
 		case 'u':
 			burn_in_phase = atof(optarg);
 			break;
@@ -190,11 +208,11 @@ int main(int argc, char* argv[]) {
 	if (double_precision) {
 		train<double>(input_file.c_str(), ptest_file, model_file.c_str(),
 			pstart_from_model, cache, alpha, beta, l1, l2, dropout,
-			epoch, push_step, fetch_step, num_threads, burn_in_phase);
+			epoch, push_step, fetch_step, num_threads, burn_in_phase, lock_free);
 	} else {
 		train<float>(input_file.c_str(), ptest_file, model_file.c_str(),
 			pstart_from_model, cache, alpha, beta, l1, l2, dropout,
-			epoch, push_step, fetch_step, num_threads, burn_in_phase);
+			epoch, push_step, fetch_step, num_threads, burn_in_phase, lock_free);
 	}
 
 	return 0;
