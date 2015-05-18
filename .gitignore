@@ -1,0 +1,21 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.page
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.page
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*~
+# Tags
+tags
+cscope.out
+# ftrl_proximal_lr
+*.save
+ftrl_train
+ftrl_predict
