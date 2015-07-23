@@ -20,6 +20,8 @@
 
 #include <unistd.h>
 #include <cstdlib>
+#include <utility>
+#include <vector>
 #include "src/file_parser.h"
 #include "src/ftrl_solver.h"
 #include "src/util.h"
@@ -27,6 +29,44 @@
 void print_usage(int argc, char* argv[]) {
 	printf("Usage:\n");
 	printf("\t%s -t test_file -m model -o output_file\n", argv[0]);
+}
+
+double calc_auc(const std::vector<std::pair<double, unsigned> >& scores) {
+	size_t num_pos = 0;
+	size_t num_neg = 0;
+	for (size_t i = 0; i < scores.size(); ++i) {
+		if (scores[i].second == 1) {
+			++num_pos;
+		} else {
+			++num_neg;
+		}
+	}
+
+	if (num_pos == 0 || num_neg == 0) {
+		return 0.;
+	}
+
+	size_t tp = 0;
+	size_t fp = 0;
+	double prev_tpr = 0.;
+	double prev_fpr = 0.;
+
+	double auc = 0.;
+	for (size_t i = 0; i < scores.size(); ++i) {
+		if (scores[i].second == 1) {
+			++tp;
+		} else {
+			++fp;
+		}
+
+		if (static_cast<double>(fp) / num_neg != prev_fpr) {
+			auc += prev_tpr * (static_cast<double>(fp) / num_neg - prev_fpr);
+			prev_tpr = static_cast<double>(tp) / num_pos;
+			prev_fpr = static_cast<double>(fp) / num_neg;
+		}
+	}
+
+	return auc;
 }
 
 int main(int argc, char* argv[]) {
@@ -70,6 +110,8 @@ int main(int argc, char* argv[]) {
 	FileParser<double> parser;
 	parser.OpenFile(test_file.c_str());
 
+	std::vector<std::pair<double, unsigned> > pred_scores;
+
 	while (1) {
 		bool res = parser.ReadSample(y, x);
 		if (!res) break;
@@ -77,6 +119,9 @@ int main(int argc, char* argv[]) {
 		double pred = model.Predict(x);
 		pred = std::max(std::min(pred, 1. - 10e-15), 10e-15);
 		fprintf(wfp, "%lf\n", pred);
+
+		pred_scores.push_back(std::move(
+			std::make_pair(pred, static_cast<unsigned>(y))));
 
 		++cnt;
 		double pred_label = 0;
@@ -87,10 +132,20 @@ int main(int argc, char* argv[]) {
 		loss += y > 0 ? -log(pred) : -log(1. - pred);
 	}
 
+	std::sort(
+		pred_scores.begin(),
+		pred_scores.end(),
+		[] (const std::pair<double, unsigned>& l, const std::pair<double, unsigned>& r) {
+		    return l.first > r.first;
+		}
+	);
+	double auc = calc_auc(pred_scores);
+
 	if (cnt > 0) {
 		printf("Accuracy = %.2lf%% (%zu/%zu)\n",
 			static_cast<double>(correct) / cnt * 100, correct, cnt);
 		printf("Log-likelihood = %lf\n", loss / cnt);
+		printf("AUC = %lf\n", auc);
 	}
 
 	parser.CloseFile();

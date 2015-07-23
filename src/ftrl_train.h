@@ -351,7 +351,7 @@ bool LockFreeFtrlTrainer<T>::Train(
 	if (!init_) return false;
 
 	size_t line_cnt = 0;
-	size_t feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt);
+	size_t feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt, num_threads_);
 	if (feat_num == 0) return false;
 
 	if (!solver_.Initialize(alpha, beta, l1, l2, feat_num, dropout)) {
@@ -370,7 +370,7 @@ bool LockFreeFtrlTrainer<T>::Train(
 	if (!init_) return false;
 
 	size_t line_cnt = 0;
-	size_t feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt);
+	size_t feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt, num_threads_);
 	if (feat_num == 0) return false;
 
 	if (!solver_.Initialize(last_model)) {
