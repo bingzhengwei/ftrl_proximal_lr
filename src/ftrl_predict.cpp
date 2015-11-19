@@ -59,7 +59,7 @@ double calc_auc(const std::vector<std::pair<double, unsigned> >& scores) {
 			++fp;
 		}
 
-		if (static_cast<double>(fp) / num_neg != prev_fpr) {
+		if (i != 0 && scores[i].first != scores[i-1].first) {
 			auc += prev_tpr * (static_cast<double>(fp) / num_neg - prev_fpr);
 			prev_tpr = static_cast<double>(tp) / num_pos;
 			prev_fpr = static_cast<double>(fp) / num_neg;
