@@ -182,6 +182,10 @@ bool FtrlSolver<T>::Initialize(const char* path) {
 
 template<typename T>
 T FtrlSolver<T>::GetWeight(size_t idx) {
+    if (idx >= feat_num_) {
+        return 0;
+    }
+
 	T sign = 1.;
 	T val = 0.;
 	if (z_[idx] < 0) {
