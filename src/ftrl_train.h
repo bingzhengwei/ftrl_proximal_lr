@@ -48,7 +48,7 @@ T calc_loss(T y, T pred) {
 	T min_sigmoid = static_cast<T>(MIN_SIGMOID);
 	T one = 1.;
 	pred = std::max(std::min(pred, max_sigmoid), min_sigmoid);
-	T loss = y > 0 ? -log(pred) : -log(one - pred);
+	T loss = y > 0 ? -log(pred) : -log(std::max(one - pred, min_sigmoid));
 	return loss;
 }
 
