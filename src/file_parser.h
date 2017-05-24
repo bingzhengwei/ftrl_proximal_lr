@@ -132,7 +132,12 @@ FileParser<T>::~FileParser() {
 
 template<typename T>
 bool FileParser<T>::OpenFile(const char* path) {
-	file_desc_ = fopen(path, "r");
+    if (strcmp(path, "stdin") == 0) {
+        file_desc_ = stdin;
+    }
+    else {
+	    file_desc_ = fopen(path, "r");
+    }
 
 	if (!file_desc_) {
 		return false;

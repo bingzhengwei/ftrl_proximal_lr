@@ -31,6 +31,7 @@ using namespace std;
 void print_usage() {
 	printf("Usage: ./ftrl_train -f input_file -m model_file [options]\n"
 		"options:\n"
+		"-f input_file : set train file. You can read sample from stdin by set '-f stdin'\n"
 		"-t test_file : set evaluation file\n"
 		// "--cache/-c : cache feature count and sample count of input file, default true\n"
 		"--epoch iteration : set number of iteration, default 1\n"
@@ -44,6 +45,7 @@ void print_usage() {
 		" thread on async model, default 0\n"
 		"--start-from model_file : set to continue training from model_file\n"
 		"--thread num : set thread num, default is single thread. 0 will use hardware concurrency\n"
+		"--feat-num num : when use stdin as input_file, set feature num, default is 0\n"
 		"--lock-free : lock-free multi-thread mode\n"
 		"--double-precision : set to use double precision, default false\n"
 		"--help : print this help\n"
@@ -52,7 +54,7 @@ void print_usage() {
 
 template<typename T>
 bool train(const char* input_file, const char* test_file, const char* model_file,
-		const char* start_from_model, bool cache, T alpha, T beta, T l1, T l2, T dropout,
+		const char* start_from_model, bool cache, T alpha, T beta, T l1, T l2, T dropout, size_t feat_num,
 		size_t epoch, size_t push_step, size_t fetch_step, size_t num_threads, T burn_in_phase,
 		bool lock_free) {
 	if (num_threads == 1) {
@@ -63,7 +65,7 @@ bool train(const char* input_file, const char* test_file, const char* model_file
 			trainer.Train(start_from_model,
 				model_file, input_file, test_file);
 		} else {
-			trainer.Train(alpha, beta, l1, l2, dropout,
+			trainer.Train(alpha, beta, l1, l2, dropout, feat_num,
 				model_file, input_file, test_file);
 		}
 	} else if (lock_free) {
@@ -109,6 +111,7 @@ int main(int argc, char* argv[]) {
 		{"cache", no_argument, NULL, 'c'},
 		{"start-from", required_argument, NULL, 'r'},
 		{"thread", required_argument, NULL, 'n'},
+		{"feat-num", required_argument, NULL, 'k'},
 		{"lock-free", no_argument, NULL, 'q'},
 		{"double-precision", no_argument, NULL, 'x'},
 		{"help", no_argument, NULL, 'h'},
@@ -131,6 +134,7 @@ int main(int argc, char* argv[]) {
 	size_t push_step = kPushStep;
 	size_t fetch_step = kFetchStep;
 	size_t num_threads = 1;
+    size_t feat_num = 0;
 	bool lock_free = false;
 
 	double burn_in_phase = 0;
@@ -179,6 +183,8 @@ int main(int argc, char* argv[]) {
 		case 'x':
 			double_precision = true;
 			break;
+        case 'k':
+            feat_num = (size_t)atoi(optarg);
 		case 'q':
 			lock_free = true;
 			break;
@@ -207,11 +213,11 @@ int main(int argc, char* argv[]) {
 
 	if (double_precision) {
 		train<double>(input_file.c_str(), ptest_file, model_file.c_str(),
-			pstart_from_model, cache, alpha, beta, l1, l2, dropout,
+			pstart_from_model, cache, alpha, beta, l1, l2, dropout, feat_num,
 			epoch, push_step, fetch_step, num_threads, burn_in_phase, lock_free);
 	} else {
 		train<float>(input_file.c_str(), ptest_file, model_file.c_str(),
-			pstart_from_model, cache, alpha, beta, l1, l2, dropout,
+			pstart_from_model, cache, alpha, beta, l1, l2, dropout, feat_num,
 			epoch, push_step, fetch_step, num_threads, burn_in_phase, lock_free);
 	}
 

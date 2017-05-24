@@ -29,6 +29,7 @@
 void print_usage(int argc, char* argv[]) {
 	printf("Usage:\n");
 	printf("\t%s -t test_file -m model -o output_file\n", argv[0]);
+	printf("\tYou can read test sample from stdin by set '-t stdin'\n");
 }
 
 double calc_auc(const std::vector<std::pair<double, unsigned> >& scores) {

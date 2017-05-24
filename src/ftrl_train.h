@@ -67,6 +67,7 @@ public:
 		T l1,
 		T l2,
 		T dropout,
+        size_t feat_num,
 		const char* model_file,
 		const char* train_file,
 		const char* test_file = NULL);
@@ -89,6 +90,7 @@ private:
 	bool cache_feature_num_;
 	FtrlSolver<T> solver_;
 	bool init_;
+    bool read_stdin_;
 };
 
 template<typename T>
@@ -189,7 +191,7 @@ private:
 
 template<typename T>
 FtrlTrainer<T>::FtrlTrainer()
-: epoch_(0), cache_feature_num_(false), init_(false) { }
+: epoch_(0), cache_feature_num_(false), init_(false), read_stdin_(false) { }
 
 template<typename T>
 FtrlTrainer<T>::~FtrlTrainer() {
@@ -211,14 +213,27 @@ bool FtrlTrainer<T>::Train(
 		T l1,
 		T l2,
 		T dropout,
+        size_t feat_num,
 		const char* model_file,
 		const char* train_file,
 		const char* test_file) {
 	if (!init_) return false;
-
+    if (strcmp(train_file, "stdin") == 0) {
+        read_stdin_ = true;
+        epoch_ = 1;
+        cache_feature_num_ = false;
+    }
 	size_t line_cnt = 0;
-	size_t feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt);
-	if (feat_num == 0) return false;
+    if (!read_stdin_) {
+	    feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt);
+    }
+	if (feat_num == 0) {
+	    printf("Usage: ./ftrl_train -f input_file -m model_file [options]\n"
+		    "options:\n"
+		    "--feat-num num : when use stdin as input_file, set feature num, default is 0\n"
+        );
+        return false;
+    }
 
 	if (!solver_.Initialize(alpha, beta, l1, l2, feat_num, dropout)) {
 		return false;
@@ -284,26 +299,48 @@ bool FtrlTrainer<T>::TrainImpl(
 			++cur_cnt;
 
 			if (cur_cnt - last_cnt > 100000 && timer.StopTimer() - last_time > 0.5) {
-				fprintf(
-					stdout,
-					"epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
-					iter,
-					cur_cnt * 100 / static_cast<float>(line_cnt),
-					timer.ElapsedTime(),
-					static_cast<float>(loss) / cur_cnt);
+                if (!read_stdin_ && line_cnt > 0) {
+                    fprintf(
+                        stdout,
+                        "epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\r",
+                        iter,
+                        cur_cnt * 100 / static_cast<float>(line_cnt),
+                        timer.ElapsedTime(),
+                        static_cast<float>(loss) / cur_cnt);
+                }
+                else {
+                    fprintf(
+                        stdout,
+                        "epoch=%zu processed=[%zu] time=[%.2f] train-loss=[%.6f]\r",
+                        iter,
+                        cur_cnt,
+                        timer.ElapsedTime(),
+                        static_cast<float>(loss) / cur_cnt);
+                }
 				fflush(stdout);
 				last_cnt = cur_cnt;
 				last_time = timer.ElapsedTime();
 			}
 		}
-		fprintf(
-			stdout,
-			"epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\n",
-			iter,
-			cur_cnt * 100 / static_cast<float>(line_cnt),
-			timer.ElapsedTime(),
-			static_cast<float>(loss) / cur_cnt);
 
+        if (!read_stdin_ && line_cnt > 0) {
+            fprintf(
+                stdout,
+                "epoch=%zu processed=[%.2f%%] time=[%.2f] train-loss=[%.6f]\n",
+                iter,
+                cur_cnt * 100 / static_cast<float>(line_cnt),
+                timer.ElapsedTime(),
+                static_cast<float>(loss) / cur_cnt);
+        }
+        else {
+            fprintf(
+                stdout,
+                "epoch=%zu processed=[%zu] time=[%.2f] train-loss=[%.6f]\n",
+                iter,
+                cur_cnt,
+                timer.ElapsedTime(),
+                static_cast<float>(loss) / cur_cnt);
+        }
 		file_parser.CloseFile();
 
 		if (test_file) {
