@@ -249,10 +249,17 @@ bool FtrlTrainer<T>::Train(
 		const char* train_file,
 		const char* test_file) {
 	if (!init_) return false;
+    if (strcmp(train_file, "stdin") == 0) {
+        read_stdin_ = true;
+        epoch_ = 1;
+        cache_feature_num_ = false;
+    }
 
 	size_t line_cnt = 0;
-	size_t feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt);
-	if (feat_num == 0) return false;
+	if (!read_stdin_) {
+		size_t feat_num = read_problem_info<T>(train_file, cache_feature_num_, line_cnt);
+		if (feat_num == 0) return false;
+	}
 
 	if (!solver_.Initialize(last_model)) {
 		return false;

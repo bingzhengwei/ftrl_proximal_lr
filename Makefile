@@ -1,5 +1,5 @@
 
-CC = g++
+CC = /opt/compiler/gcc-4.8.2/bin/g++
 CPPFLAGS = -Wall -O3 -fPIC -std=c++11 -march=native
 INCLUDES = -I.
 LDFLAGS = -pthread

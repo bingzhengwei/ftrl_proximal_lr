@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
 
 		double pred = model.Predict(x);
 		pred = std::max(std::min(pred, 1. - 10e-15), 10e-15);
-		fprintf(wfp, "%lf\n", pred);
+		fprintf(wfp, "%u\t%lf\n", static_cast<unsigned>(y), pred);
 
 		pred_scores.push_back(std::move(
 			std::make_pair(pred, static_cast<unsigned>(y))));
